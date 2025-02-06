@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import * as AuthActions from '../../../core/store/auth/auth.actions';
 import { AuthState } from '../../../core/store/auth/auth.reducer';
 
@@ -13,12 +13,14 @@ import { AuthState } from '../../../core/store/auth/auth.reducer';
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './edit-profile.component.html'
 })
-export class EditProfileComponent implements OnInit {
+export class EditProfileComponent implements OnInit, OnDestroy {
   profileForm: FormGroup;
   loading$: Observable<boolean>;
   error$: Observable<any>;
   selectedFile: File | null = null;
   currentUser$: Observable<any>;
+  private destroy$ = new Subject<void>();
+  private userId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -39,18 +41,26 @@ export class EditProfileComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.currentUser$.subscribe(user => {
-      if (user) {
-        this.profileForm.patchValue({
-          email: user.email,
-          nom: user.nom,
-          prenom: user.prenom,
-          adresse: user.adresse,
-          telephone: user.telephone,
-          dateNaissance: user.dateNaissance
-        });
-      }
-    });
+    this.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        if (user) {
+          this.userId = user.id;
+          this.profileForm.patchValue({
+            email: user.email,
+            nom: user.nom,
+            prenom: user.prenom,
+            adresse: user.adresse,
+            telephone: user.telephone,
+            dateNaissance: user.dateNaissance
+          });
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   onFileSelected(event: any) {
@@ -59,12 +69,13 @@ export class EditProfileComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.profileForm.valid) {
+    if (this.profileForm.valid && this.userId) {
       const userData = {
         ...this.profileForm.value,
+        id: this.userId,
         photo: this.selectedFile
       };
-      this.store.dispatch(AuthActions.updateProfile(userData));
+      this.store.dispatch(AuthActions.updateProfile({ userData }));
     } else {
       this.markFormGroupTouched(this.profileForm);
     }
@@ -72,7 +83,7 @@ export class EditProfileComponent implements OnInit {
 
   onDeleteAccount() {
     if (confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')) {
-      this.store.dispatch(AuthActions.deleteAccount());
+      this.store.dispatch(AuthActions.deleteAccount({ userId: this.userId! }));
     }
   }
 
