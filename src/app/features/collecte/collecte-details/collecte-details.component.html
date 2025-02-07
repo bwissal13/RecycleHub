@@ -1,0 +1,99 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- En-tête -->
+    <div class="md:flex md:items-center md:justify-between">
+      <div class="flex-1 min-w-0">
+        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+          Détails de la collecte
+        </h2>
+      </div>
+      <div class="mt-4 flex md:mt-0 md:ml-4">
+        <a
+          routerLink="/collecte"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          Retour à la liste
+        </a>
+      </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Demande #{{ collecte.id }}
+          </h3>
+          <span [class]="'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ' + getStatutClass(collecte.statut)">
+            {{ getStatutLabel(collecte.statut) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+        <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+          <div class="sm:col-span-1">
+            <dt class="text-sm font-medium text-gray-500">Type de matériaux</dt>
+            <dd class="mt-1 text-sm text-gray-900">{{ collecte.type }}</dd>
+          </div>
+
+          <div class="sm:col-span-1">
+            <dt class="text-sm font-medium text-gray-500">Poids estimé</dt>
+            <dd class="mt-1 text-sm text-gray-900">{{ collecte.poids }} kg</dd>
+          </div>
+
+          <div class="sm:col-span-1">
+            <dt class="text-sm font-medium text-gray-500">Date de collecte</dt>
+            <dd class="mt-1 text-sm text-gray-900">{{ collecte.date | date:'dd/MM/yyyy' }}</dd>
+          </div>
+
+          <div class="sm:col-span-1">
+            <dt class="text-sm font-medium text-gray-500">Créneau horaire</dt>
+            <dd class="mt-1 text-sm text-gray-900">{{ collecte.creneau }}</dd>
+          </div>
+
+          <div class="sm:col-span-2">
+            <dt class="text-sm font-medium text-gray-500">Adresse de collecte</dt>
+            <dd class="mt-1 text-sm text-gray-900">{{ collecte.adresse }}</dd>
+          </div>
+
+          <div class="sm:col-span-2" *ngIf="collecte.notes">
+            <dt class="text-sm font-medium text-gray-500">Notes</dt>
+            <dd class="mt-1 text-sm text-gray-900">{{ collecte.notes }}</dd>
+          </div>
+
+          <!-- Photos -->
+          <div class="sm:col-span-2" *ngIf="collecte.photos && collecte.photos.length > 0">
+            <dt class="text-sm font-medium text-gray-500">Photos</dt>
+            <dd class="mt-1 grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <div
+                *ngFor="let photo of collecte.photos"
+                class="relative rounded-lg overflow-hidden group aspect-w-10 aspect-h-7"
+              >
+                <img
+                  [src]="photo"
+                  alt="Photo des déchets"
+                  class="object-cover pointer-events-none group-hover:opacity-75"
+                >
+                <button type="button" class="absolute inset-0 focus:outline-none">
+                  <span class="sr-only">Voir la photo</span>
+                </button>
+              </div>
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Actions -->
+      <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+        <button
+          type="button"
+          class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          *ngIf="collecte.statut === 'en_attente'"
+        >
+          Annuler la demande
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 
