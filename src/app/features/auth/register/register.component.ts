@@ -46,7 +46,8 @@ export class RegisterComponent {
     if (this.registerForm.valid) {
       const userData = {
         ...this.registerForm.value,
-        photo: this.selectedFile
+        photo: this.selectedFile,
+        role: 'user'
       };
       this.store.dispatch(AuthActions.register(userData));
     } else {
