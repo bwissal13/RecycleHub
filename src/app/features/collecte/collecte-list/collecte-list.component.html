@@ -1,0 +1,126 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="sm:flex sm:items-center">
+      <div class="sm:flex-auto">
+        <h1 class="text-2xl font-semibold text-gray-900">Mes demandes de collecte</h1>
+        <p class="mt-2 text-sm text-gray-700">
+          Liste de toutes vos demandes de collecte et leur statut.
+        </p>
+      </div>
+      <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+        <a
+          routerLink="/collecte/nouvelle"
+          class="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:w-auto"
+        >
+          Nouvelle collecte
+        </a>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div *ngIf="loading" class="mt-8 flex justify-center items-center p-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error" class="mt-8 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+      <strong class="font-bold">Erreur!</strong>
+      <span class="block sm:inline ml-2">{{ error }}</span>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && !error && collectes.length === 0" class="mt-8 text-center py-12 bg-white rounded-lg shadow">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <p class="mt-4 text-gray-600">Vous n'avez pas encore de demandes de collecte.</p>
+      <a routerLink="/collecte/nouvelle" class="mt-4 inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+        Créer une demande
+      </a>
+    </div>
+
+    <!-- Collection requests list -->
+    <div *ngIf="!loading && !error && collectes.length > 0" class="mt-8">
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div *ngFor="let collecte of collectes" class="bg-white rounded-lg shadow-md overflow-hidden">
+          <!-- Header with status -->
+          <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+            <span [class]="'px-3 py-1 rounded-full text-sm font-semibold ' + getStatutClass(collecte.statut)">
+                      {{ getStatutLabel(collecte.statut) }}
+                    </span>
+            <span class="text-sm text-gray-500">ID: {{ collecte.id }}</span>
+          </div>
+
+          <!-- Content -->
+          <div class="p-4 space-y-4">
+            <!-- Photos section -->
+            <div *ngIf="collecte.photos?.length" class="mb-4">
+              <div class="grid grid-cols-2 gap-2">
+                <div *ngFor="let photo of collecte.photos; let i = index" class="relative aspect-square bg-gray-100 rounded overflow-hidden">
+                  <img [src]="getPhotoUrl(photo)" 
+                       [alt]="'Photo du déchet ' + collecte.id"
+                       class="absolute inset-0 w-full h-full object-cover"
+                       (error)="onImageError($event)"
+                       loading="lazy">
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Types de déchets</h3>
+              <p class="mt-1 text-gray-900">{{ getTypesDisplay(collecte) }}</p>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Poids estimé</h3>
+              <p class="mt-1 text-gray-900">{{ collecte.poids }} kg</p>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-medium text-gray-500">Adresse</h3>
+              <p class="mt-1 text-gray-900">{{ collecte.adresse }}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <h3 class="text-sm font-medium text-gray-500">Date</h3>
+                <p class="mt-1 text-gray-900">{{ collecte.date | date:'dd/MM/yyyy' }}</p>
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-gray-500">Créneau</h3>
+                <p class="mt-1 text-gray-900">{{ collecte.creneau }}</p>
+              </div>
+            </div>
+
+            <div *ngIf="collecte.notes" class="border-t border-gray-200 pt-4">
+              <h3 class="text-sm font-medium text-gray-500">Notes</h3>
+              <p class="mt-1 text-gray-900">{{ collecte.notes }}</p>
+            </div>
+
+            <div *ngIf="collecte.poidsReel" class="border-t border-gray-200 pt-4">
+              <h3 class="text-sm font-medium text-gray-500">Poids réel</h3>
+              <p class="mt-1 text-gray-900">{{ collecte.poidsReel }} kg</p>
+            </div>
+
+            <div *ngIf="collecte.raisonRejet" class="border-t border-gray-200 pt-4">
+              <h3 class="text-sm font-medium text-gray-500">Raison du rejet</h3>
+              <p class="mt-1 text-red-600">{{ collecte.raisonRejet }}</p>
+            </div>
+
+            <!-- Actions -->
+            <div *ngIf="collecte.statut === 'en_attente'" class="border-t border-gray-200 pt-4 flex justify-end space-x-2">
+              <button [routerLink]="['/collecte', collecte.id, 'edit']"
+                      class="px-3 py-1.5 text-sm bg-blue-100 text-blue-800 rounded hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Modifier
+              </button>
+              <button (click)="onDelete(collecte.id)"
+                      class="px-3 py-1.5 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Supprimer
+              </button>
+                    </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
