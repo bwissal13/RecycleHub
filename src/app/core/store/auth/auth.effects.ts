@@ -33,8 +33,12 @@ export class AuthEffects {
     () =>
       this.actions$.pipe(
         ofType(AuthActions.loginSuccess),
-        tap(() => {
-          this.router.navigate(['/home']);
+        tap(({ user }) => {
+          if (user.role === 'collecteur') {
+            this.router.navigate(['/collecteur']);
+          } else {
+            this.router.navigate(['/home']);
+          }
         })
       ),
     { dispatch: false }
@@ -144,6 +148,13 @@ export class AuthEffects {
   logout$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.logout),
+      tap(() => {
+        // Clear localStorage immediately
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('recycleHub_points');
+        localStorage.removeItem('recycleHub_transactions');
+      }),
       mergeMap(() =>
         this.authService.logout().pipe(
           map(() => AuthActions.logoutSuccess()),
