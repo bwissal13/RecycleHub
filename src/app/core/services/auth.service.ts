@@ -25,10 +25,48 @@ export class AuthService {
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     if (isPlatformBrowser(this.platformId)) {
-      if (!this.getItem(this.USERS_KEY)) {
-        this.setItem(this.USERS_KEY, JSON.stringify([]));
-      }
+      this.ensureCollectorsExist();
     }
+  }
+
+  private ensureCollectorsExist(): void {
+    // Pre-registered collectors that should always exist
+    const preRegisteredCollectors: User[] = [
+      {
+        id: 1,
+        email: 'collecteur1@recyclehub.ma',
+        password: btoa('Collector123!'),
+        nom: 'Alami',
+        prenom: 'Hassan',
+        adresse: 'Youssoufia, Maroc',
+        telephone: '0600000001',
+        dateNaissance: '1990-01-01',
+        role: 'collecteur'
+      },
+      {
+        id: 2,
+        email: 'collecteur2@recyclehub.ma',
+        password: btoa('Collector123!'),
+        nom: 'Bennani',
+        prenom: 'Karim',
+        adresse: 'Youssoufia, Maroc',
+        telephone: '0600000002',
+        dateNaissance: '1992-02-02',
+        role: 'collecteur'
+      }
+    ];
+    
+    // Get existing users
+    let users = this.getUsers();
+    
+    // Remove existing collectors
+    users = users.filter(user => !user.email.includes('@recyclehub.ma'));
+    
+    // Add collectors
+    users.push(...preRegisteredCollectors);
+    
+    // Save updated users list
+    this.saveUsers(users);
   }
 
   private getItem(key: string): string | null {
@@ -60,10 +98,15 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<any> {
+    console.log('Login attempt:', { email }); // Debug log
     const users = this.getUsers();
+    console.log('Available users:', users); // Debug log
+    
     const hashedPassword = btoa(password);
+    console.log('Hashed password:', hashedPassword); // Debug log
+    
     const user = users.find(u => u.email === email && u.password === hashedPassword);
-
+    
     if (user) {
       const { password: _, ...userWithoutPassword } = user;
       const token = 'token-' + Math.random();
@@ -79,6 +122,11 @@ export class AuthService {
     
     if (users.find(u => u.email === userData.email)) {
       return throwError(() => ({ message: 'Cet email est déjà utilisé' })).pipe(delay(500));
+    }
+
+    // Vérifier que l'email n'est pas un email de collecteur
+    if (userData.email.includes('@recyclehub.ma')) {
+      return throwError(() => ({ message: 'Cet email est réservé aux collecteurs' })).pipe(delay(500));
     }
 
     const hashedPassword = btoa(userData.password);
