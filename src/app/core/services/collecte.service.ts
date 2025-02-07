@@ -1,5 +1,23 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, throwError, from, map } from 'rxjs';
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
+import { map, delay, tap } from 'rxjs/operators';
+import { isPlatformBrowser } from '@angular/common';
+import { AuthService } from './auth.service';
+import { PointsService } from './points.service';
+
+export interface User {
+  id: number;
+  email: string;
+  nom: string;
+  prenom: string;
+  adresse: string;
+  telephone: string;
+  dateNaissance: string;
+  photo?: string;
+  role: 'user' | 'collecteur';
+  points: number;
+  password?: string;
+}
 
 export interface Collecte {
   id: number;
@@ -18,6 +36,7 @@ export interface Collecte {
   collecteurId?: number;
   poidsReel?: number;
   raisonRejet?: string;
+  pointsAttribues?: number;
 }
 
 function isBlob(value: any): value is Blob {
@@ -37,71 +56,53 @@ function isBlob(value: any): value is Blob {
 })
 export class CollecteService {
   private readonly STORAGE_KEY = 'recycleHub_collectes';
+  private readonly POINTS_PER_KG = {
+    'Plastique': 2,
+    'Verre': 1,
+    'Papier': 1.5,
+    'Métal': 3
+  };
 
-  constructor() {
-    // Initialiser les données si elles n'existent pas
-    if (!localStorage.getItem(this.STORAGE_KEY)) {
-      // Données de test pour le débogage
-      const debugCollectes: Collecte[] = [
-        {
-          id: 1,
-          userId: 1,
-          types: [
-            { type: 'Plastique', poids: 5 },
-            { type: 'Verre', poids: 5 }
-          ],
-          poids: 10,
-          adresse: 'marrakech,mhamid4',
-          date: '2024-02-15',
-          creneau: '14:00-15:00',
-          statut: 'en_attente',
-          photos: ['default-avatar.png', 'recycle.png']
-        },
-        {
-          id: 2,
-          userId: 1,
-          types: [
-            { type: 'Plastique', poids: 1 }
-          ],
-          poids: 1,
-          adresse: 'marrakech,mhamid4',
-          date: '2024-02-28',
-          creneau: '11:00-12:00',
-          statut: 'en_attente',
-          photos: ['default-avatar.png']
-        }
-      ];
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(debugCollectes));
+  private collectesSubject = new BehaviorSubject<Collecte[]>([]);
+  public collectes$ = this.collectesSubject.asObservable();
+
+  constructor(
+    private authService: AuthService,
+    private pointsService: PointsService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.initializeCollectes();
+    }
+  }
+
+  private initializeCollectes() {
+    const collectesJson = localStorage.getItem(this.STORAGE_KEY);
+    if (!collectesJson) {
+      // Initialize with empty array if no data exists
+      this.saveCollectes([]);
+      return;
+    }
+
+    try {
+      const collectes = JSON.parse(collectesJson);
+      if (Array.isArray(collectes)) {
+        this.collectesSubject.next(collectes);
+      } else {
+        this.saveCollectes([]);
+      }
+    } catch (error) {
+      console.error('Error parsing collectes:', error);
+      this.saveCollectes([]);
     }
   }
 
   private getCollectes(): Collecte[] {
-    if (typeof window === 'undefined') return [];
-    const collectesJson = localStorage.getItem(this.STORAGE_KEY);
-    console.log('Raw collectes from localStorage:', collectesJson);
-    if (!collectesJson) return [];
-
-    try {
-      const collectes = JSON.parse(collectesJson);
-      // Si c'est un tableau, retourner directement
-      if (Array.isArray(collectes)) {
-        return collectes.map(collecte => ({
-          ...collecte,
-          photos: Array.isArray(collecte.photos) 
-            ? collecte.photos.map((photo: unknown) => typeof photo === 'string' ? photo : 'default-avatar.png')
-            : ['default-avatar.png']
-        }));
-      }
-      return [];
-    } catch (error) {
-      console.error('Error parsing collectes:', error);
-      return [];
-    }
+    return this.collectesSubject.value;
   }
 
   private saveCollectes(collectes: Collecte[]): void {
-    if (typeof window !== 'undefined') {
-      // Process collectes before saving
+    if (isPlatformBrowser(this.platformId)) {
       const processedCollectes = collectes.map(collecte => ({
         ...collecte,
         photos: Array.isArray(collecte.photos)
@@ -110,124 +111,88 @@ export class CollecteService {
       }));
       
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(processedCollectes));
+      this.collectesSubject.next(processedCollectes);
     }
   }
 
-  createCollecte(data: Omit<Collecte, 'id' | 'statut'> & { photos?: (Blob | string)[] }): Observable<Collecte> {
-    const collectes = this.getCollectes();
-    
-    // Vérifier le nombre de collectes en attente pour l'utilisateur
-    const collectesEnAttente = collectes.filter(
-      c => c.userId === data.userId && 
-      ['en_attente', 'occupee', 'en_cours'].includes(c.statut)
-    );
+  private calculatePoints(types: Array<{ type: string; poids: number }>): number {
+    return types.reduce((total, type) => {
+      const pointsParKg = this.POINTS_PER_KG[type.type as keyof typeof this.POINTS_PER_KG] || 0;
+      return total + (type.poids * pointsParKg);
+    }, 0);
+  }
 
-    if (collectesEnAttente.length >= 3) {
-      return throwError(() => new Error('Vous avez déjà 3 collectes en cours'));
-    }
-
-    // Vérifier le poids minimum et maximum
-    if (data.poids < 1) {
-      return throwError(() => new Error('Le poids minimum est de 1kg'));
-    }
-    if (data.poids > 10) {
-      return throwError(() => new Error('Le poids maximum est de 10kg'));
-    }
-
-    // Vérifier l'heure du créneau
-    const [heure] = data.creneau.split(':').map(Number);
-    if (heure < 8 || heure >= 18) {
-      return throwError(() => new Error('Les créneaux doivent être entre 08h00 et 18h00'));
-    }
-
-    // Traiter les photos
-    const photos: string[] = [];
-    
-    if (data.photos && data.photos.length > 0) {
-      const photoPromises = data.photos.map(photo => {
-        if (isBlob(photo)) {
-          return new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              resolve(reader.result as string);
-            };
-            reader.readAsDataURL(photo);
-          });
-        } else if (typeof photo === 'string') {
-          // If it's already a data URL, keep it
-          if (photo.startsWith('data:')) {
-            return Promise.resolve(photo);
-          }
-          // If it's a blob URL, try to fetch and convert
-          if (photo.startsWith('blob:')) {
-            return fetch(photo)
-              .then(r => r.blob())
-              .then(blob => new Promise<string>((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  resolve(reader.result as string);
-                };
-                reader.readAsDataURL(blob);
-              }));
-          }
+  private async processPhotos(photos: (string | Blob)[]): Promise<string[]> {
+    const processedPhotos = await Promise.all(
+      photos.map(async (photo) => {
+        if (photo instanceof Blob) {
+          return await this.convertBlobToBase64(photo);
         }
-        return Promise.resolve('');
-      });
+        return photo;
+      })
+    );
+    return processedPhotos;
+  }
 
-      // Wait for all photo conversions
-      return from(Promise.all(photoPromises)).pipe(
-        map(processedPhotos => {
-          const validPhotos = processedPhotos.filter(p => p); // Remove empty strings
+  private convertBlobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  createCollecte(data: Omit<Collecte, 'id' | 'statut'> & { photos?: (Blob | string)[] }): Observable<Collecte> {
+    return new Observable<Collecte>((subscriber) => {
+      (async () => {
+        try {
+          const collectes = this.getCollectes();
+          const processedPhotos = data.photos ? await this.processPhotos(data.photos) : [];
           
           const newCollecte: Collecte = {
             ...data,
             id: Date.now(),
             statut: 'en_attente',
-            photos: validPhotos.length > 0 ? validPhotos : ['assets/images/default-avatar.png']
+            photos: processedPhotos,
+            pointsAttribues: 0
           };
 
-          console.log('Saving new collecte with photos:', validPhotos.length);
           collectes.push(newCollecte);
           this.saveCollectes(collectes);
+          subscriber.next(newCollecte);
+          subscriber.complete();
+        } catch (error) {
+          subscriber.error(error);
+        }
+      })();
 
-          return newCollecte;
-        })
-      );
-    }
-
-    // If no photos, create collecte with default
-    const newCollecte: Collecte = {
-      ...data,
-      id: Date.now(),
-      statut: 'en_attente',
-      photos: ['assets/images/default-avatar.png']
-    };
-
-    collectes.push(newCollecte);
-    this.saveCollectes(collectes);
-
-    return of(newCollecte);
+      return () => {
+        // Cleanup if needed
+      };
+    }).pipe(delay(500));
   }
 
   getUserCollectes(userId: number): Observable<Collecte[]> {
     console.log('Getting collectes for userId:', userId);
-    const collectes = this.getCollectes();
-    const userCollectes = collectes.filter(c => c.userId === userId);
-    console.log('Filtered collectes for user:', userCollectes);
-    return of(userCollectes);
+    return this.collectes$.pipe(
+      map(collectes => collectes.filter(c => c.userId === userId))
+    );
   }
 
   getCollectesByVille(ville: string): Observable<Collecte[]> {
-    const collectes = this.getCollectes();
-    return of(collectes.filter(c => 
-      c.adresse.toLowerCase().includes(ville.toLowerCase()) && 
-      c.statut === 'en_attente'
-    ));
+    return this.collectes$.pipe(
+      map(collectes => collectes.filter(c => 
+        c.adresse.toLowerCase().includes(ville.toLowerCase()) && 
+        c.statut === 'en_attente'
+      ))
+    );
   }
 
   getCollectesByCollecteur(collecteurId: number): Observable<Collecte[]> {
-    const collectes = this.getCollectes();
-    return of(collectes.filter(c => c.collecteurId === collecteurId));
+    return this.collectes$.pipe(
+      map(collectes => collectes.filter(c => c.collecteurId === collecteurId))
+    );
   }
 
   getCollecteById(id: number): Observable<Collecte> {
@@ -237,7 +202,7 @@ export class CollecteService {
     if (!collecte) {
       return throwError(() => new Error('Collecte non trouvée'));
     }
-
+    
     return of(collecte);
   }
 
@@ -249,29 +214,10 @@ export class CollecteService {
       return throwError(() => new Error('Collecte non trouvée'));
     }
 
-    // Vérifier si la collecte peut être modifiée
-    if (collectes[index].statut !== 'en_attente' && !updates.statut) {
-      return throwError(() => new Error('Seules les collectes en attente peuvent être modifiées'));
-    }
-
-    // Si mise à jour du poids, vérifier le total
-    if (updates.poids) {
-      const autresCollectes = collectes.filter(
-        c => c.userId === collectes[index].userId && 
-        c.id !== collecteId && 
-        ['en_attente', 'occupee', 'en_cours'].includes(c.statut)
-      );
-      const poidsTotal = autresCollectes.reduce((sum, c) => sum + c.poids, 0) + updates.poids;
-      
-      if (poidsTotal > 10) {
-        return throwError(() => new Error('Le poids total de vos collectes ne peut pas dépasser 10kg'));
-      }
-    }
-
     collectes[index] = { ...collectes[index], ...updates };
     this.saveCollectes(collectes);
-
-    return of(collectes[index]);
+    
+    return of(collectes[index]).pipe(delay(500));
   }
 
   deleteCollecte(collecteId: number): Observable<void> {
@@ -282,14 +228,10 @@ export class CollecteService {
       return throwError(() => new Error('Collecte non trouvée'));
     }
 
-    if (collectes[index].statut !== 'en_attente') {
-      return throwError(() => new Error('Seules les collectes en attente peuvent être supprimées'));
-    }
-
     collectes.splice(index, 1);
     this.saveCollectes(collectes);
-
-    return of(void 0);
+    
+    return of(void 0).pipe(delay(500));
   }
 
   accepterCollecte(collecteId: number, collecteurId: number): Observable<Collecte> {
@@ -306,10 +248,59 @@ export class CollecteService {
   }
 
   validerCollecte(collecteId: number, poidsReel: number): Observable<Collecte> {
-    return this.updateCollecte(collecteId, {
-      statut: 'validee',
-      poidsReel
-    });
+    console.log('Validation de la collecte:', { collecteId, poidsReel });
+    return new Observable<Collecte>(subscriber => {
+      try {
+        const collectes = this.getCollectes();
+        const collecteIndex = collectes.findIndex(c => c.id === collecteId);
+        
+        if (collecteIndex === -1) {
+          throw new Error('Collecte non trouvée');
+        }
+
+        const collecte = collectes[collecteIndex];
+        
+        if (collecte.statut === 'validee') {
+          throw new Error('Cette collecte a déjà été validée');
+        }
+
+        // Calculer les points en fonction du poids réel et du type de déchet
+        const pointsGagnes = collecte.types.reduce((total, type) => {
+          const pointsParKg = this.POINTS_PER_KG[type.type as keyof typeof this.POINTS_PER_KG] || 1;
+          const poidsTypeReel = (poidsReel / collecte.poids) * type.poids; // Calcul proportionnel du poids réel par type
+          return total + (poidsTypeReel * pointsParKg);
+        }, 0);
+
+        console.log('Points calculés:', pointsGagnes);
+
+        // Mettre à jour la collecte
+        const updatedCollecte: Collecte = {
+          ...collecte,
+          statut: 'validee',
+          poidsReel,
+          pointsAttribues: pointsGagnes
+        };
+
+        // Mettre à jour les points de l'utilisateur
+        this.pointsService.addCollectePoints(
+          collecte.types.map(type => ({
+            type: type.type,
+            poids: (poidsReel / collecte.poids) * type.poids // Calcul proportionnel du poids réel par type
+          }))
+        );
+
+        // Sauvegarder la collecte mise à jour
+        collectes[collecteIndex] = updatedCollecte;
+        this.saveCollectes(collectes);
+
+        console.log('Collecte validée avec succès:', updatedCollecte);
+        subscriber.next(updatedCollecte);
+        subscriber.complete();
+      } catch (error) {
+        console.error('Erreur lors de la validation:', error);
+        subscriber.error(error);
+      }
+    }).pipe(delay(500));
   }
 
   rejeterCollecte(collecteId: number, raison: string): Observable<Collecte> {

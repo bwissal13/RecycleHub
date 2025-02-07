@@ -1,148 +1,159 @@
-import { Injectable, inject, PLATFORM_ID } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
-interface PointsData {
-  total: number;
-  history: PointsHistory[];
-  rewards: Reward[];
-}
-
-interface PointsHistory {
+export interface PointTransaction {
   id: number;
   date: string;
-  type: 'collecte' | 'conversion';
+  type: 'collecte' | 'echange';
   points: number;
   description: string;
+  details?: {
+    materiaux?: Array<{ type: string; poids: number; points: number }>;
+    bonAchat?: { valeur: number; points: number };
+  };
 }
-
-interface Reward {
-  id: number;
-  name: string;
-  description: string;
-  pointsCost: number;
-  image: string;
-}
-
-const DEFAULT_REWARDS: Reward[] = [
-  {
-    id: 1,
-    name: 'Bon d\'achat 10€',
-    description: 'Valable dans tous les magasins partenaires',
-    pointsCost: 1000,
-    image: 'assets/images/rewards/voucher-10.png'
-  },
-  {
-    id: 2,
-    name: 'Bon d\'achat 20€',
-    description: 'Valable dans tous les magasins partenaires',
-    pointsCost: 2000,
-    image: 'assets/images/rewards/voucher-20.png'
-  },
-  {
-    id: 3,
-    name: 'Bon d\'achat 50€',
-    description: 'Valable dans tous les magasins partenaires',
-    pointsCost: 5000,
-    image: 'assets/images/rewards/voucher-50.png'
-  }
-];
 
 @Injectable({
   providedIn: 'root'
 })
 export class PointsService {
-  private platformId = inject(PLATFORM_ID);
-  private readonly STORAGE_KEY = 'recycleHub_points';
+  private readonly POINTS_KEY = 'recycleHub_points';
+  private readonly TRANSACTIONS_KEY = 'recycleHub_transactions';
+  private readonly POINTS_PER_KG = {
+    'Plastique': 2,
+    'Verre': 1,
+    'Papier': 1,
+    'Métal': 5
+  };
+  private readonly CONVERSION_RATES = [
+    { points: 100, valeur: 50 },
+    { points: 200, valeur: 120 },
+    { points: 500, valeur: 350 }
+  ];
 
-  private getStorage() {
-    return isPlatformBrowser(this.platformId) ? localStorage : null;
+  private pointsSubject = new BehaviorSubject<number>(0);
+  private transactionsSubject = new BehaviorSubject<PointTransaction[]>([]);
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.loadPointsData();
   }
 
-  constructor() {
-    const storage = this.getStorage();
-    if (storage && !storage.getItem(this.STORAGE_KEY)) {
-      storage.setItem(this.STORAGE_KEY, JSON.stringify({
-        total: 0,
-        history: [],
-        rewards: DEFAULT_REWARDS
-      }));
+  private loadPointsData() {
+    if (isPlatformBrowser(this.platformId)) {
+      const currentUserJson = localStorage.getItem('currentUser');
+      if (currentUserJson) {
+        const currentUser = JSON.parse(currentUserJson);
+        this.pointsSubject.next(currentUser.points || 0);
+      }
+
+      const transactionsJson = localStorage.getItem(this.TRANSACTIONS_KEY);
+      if (transactionsJson) {
+        const transactions = JSON.parse(transactionsJson);
+        this.transactionsSubject.next(transactions);
+      }
     }
   }
 
-  private getData(): PointsData {
-    const storage = this.getStorage();
-    const data = storage?.getItem(this.STORAGE_KEY);
-    return data ? JSON.parse(data) : { total: 0, history: [], rewards: DEFAULT_REWARDS };
+  getPoints(): Observable<number> {
+    return this.pointsSubject.asObservable();
   }
 
-  private saveData(data: PointsData): void {
-    const storage = this.getStorage();
-    if (storage) {
-      storage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-    }
+  getTransactions(): Observable<PointTransaction[]> {
+    return this.transactionsSubject.asObservable();
   }
 
-  getPointsData(): Observable<PointsData> {
-    return of(this.getData());
+  getConversionRates() {
+    return this.CONVERSION_RATES;
   }
 
-  addPoints(data: { points: number; description: string; operationType: 'collecte' }): Observable<PointsData> {
-    const currentData = this.getData();
-    const newHistory: PointsHistory = {
+  calculatePointsForCollecte(materiaux: Array<{ type: string; poids: number }>): number {
+    return materiaux.reduce((total, item) => {
+      const pointsPerKg = this.POINTS_PER_KG[item.type as keyof typeof this.POINTS_PER_KG] || 0;
+      return total + (item.poids * pointsPerKg);
+    }, 0);
+  }
+
+  addCollectePoints(materiaux: Array<{ type: string; poids: number }>) {
+    const pointsEarned = this.calculatePointsForCollecte(materiaux);
+    const currentPoints = this.pointsSubject.value;
+    const newTotal = currentPoints + pointsEarned;
+
+    const transaction: PointTransaction = {
       id: Date.now(),
       date: new Date().toISOString(),
       type: 'collecte',
-      points: data.points,
-      description: data.description
+      points: pointsEarned,
+      description: 'Points gagnés pour la collecte',
+      details: {
+        materiaux: materiaux.map(m => ({
+          ...m,
+          points: m.poids * (this.POINTS_PER_KG[m.type as keyof typeof this.POINTS_PER_KG] || 0)
+        }))
+      }
     };
 
-    const updatedData: PointsData = {
-      ...currentData,
-      total: currentData.total + data.points,
-      history: [newHistory, ...currentData.history]
-    };
-
-    this.saveData(updatedData);
-    return of(updatedData);
+    this.updatePoints(newTotal, transaction);
   }
 
-  convertPoints(data: { rewardId: number; pointsCost: number }): Observable<PointsData> {
-    const currentData = this.getData();
-    
-    // Vérifier si l'utilisateur a assez de points
-    if (currentData.total < data.pointsCost) {
-      throw new Error('Points insuffisants');
+  exchangePoints(pointsToExchange: number): boolean {
+    const rate = this.CONVERSION_RATES.find(r => r.points === pointsToExchange);
+    if (!rate || this.pointsSubject.value < pointsToExchange) {
+      return false;
     }
 
-    const reward = currentData.rewards.find(r => r.id === data.rewardId);
-    if (!reward) {
-      throw new Error('Récompense non trouvée');
-    }
+    const currentPoints = this.pointsSubject.value;
+    const newTotal = currentPoints - pointsToExchange;
 
-    const newHistory: PointsHistory = {
+    const transaction: PointTransaction = {
       id: Date.now(),
       date: new Date().toISOString(),
-      type: 'conversion',
-      points: -data.pointsCost,
-      description: `Conversion en ${reward.name}`
+      type: 'echange',
+      points: -pointsToExchange,
+      description: `Échange de points contre un bon d'achat`,
+      details: {
+        bonAchat: { valeur: rate.valeur, points: pointsToExchange }
+      }
     };
 
-    const updatedData: PointsData = {
-      ...currentData,
-      total: currentData.total - data.pointsCost,
-      history: [newHistory, ...currentData.history]
-    };
-
-    this.saveData(updatedData);
-    return of(updatedData);
+    this.updatePoints(newTotal, transaction);
+    return true;
   }
 
-  getRewards(): Observable<Reward[]> {
-    return of(this.getData().rewards);
-  }
+  private updatePoints(newTotal: number, transaction?: PointTransaction) {
+    if (isPlatformBrowser(this.platformId)) {
+      // Update points in localStorage and state
+      const currentUserJson = localStorage.getItem('currentUser');
+      if (currentUserJson) {
+        const currentUser = JSON.parse(currentUserJson);
+        currentUser.points = newTotal;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        // Update users list
+        const usersJson = localStorage.getItem('users');
+        if (usersJson) {
+          const users = JSON.parse(usersJson);
+          const userIndex = users.findIndex((u: any) => u.id === currentUser.id);
+          if (userIndex !== -1) {
+            users[userIndex].points = newTotal;
+            localStorage.setItem('users', JSON.stringify(users));
+          }
+        }
 
-  getHistory(): Observable<PointsHistory[]> {
-    return of(this.getData().history);
+        // Emit the new points value immediately
+        this.pointsSubject.next(newTotal);
+
+        // Update transactions if provided
+        if (transaction) {
+          const currentTransactions = this.transactionsSubject.value;
+          const updatedTransactions = [transaction, ...currentTransactions];
+          this.transactionsSubject.next(updatedTransactions);
+          localStorage.setItem(this.TRANSACTIONS_KEY, JSON.stringify(updatedTransactions));
+        }
+
+        // Force a refresh of the points in the store
+        window.dispatchEvent(new Event('storage'));
+      }
+    }
   }
 } 
