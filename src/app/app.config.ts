@@ -4,6 +4,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
+import { provideClientHydration } from '@angular/platform-browser';
 
 import { routes } from './app.routes';
 import { authReducer } from './core/store/auth/auth.reducer';
@@ -30,6 +31,7 @@ export const appConfig: ApplicationConfig = {
     provideEffects([
       AuthEffects,
       PointsEffects
-    ])
+    ]),
+    provideClientHydration()
   ]
 };
