@@ -1,0 +1,403 @@
+/* Auth layout styles */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  padding: 2rem;
+}
+
+.auth-content {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  padding: 2rem;
+  position: relative;
+}
+
+/* Form Header */
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.form-subtitle a {
+  color: #16a34a;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* Form Controls */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.form-input:hover {
+  border-color: #d1d5db;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+/* Button styles */
+.btn-primary {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background-color: #16a34a;
+  color: white;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.btn-primary:hover {
+  background-color: #15803d;
+}
+
+/* Checkbox styles */
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.form-checkbox input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.form-checkbox label {
+  font-size: 0.875rem;
+  color: #666;
+  cursor: pointer;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-content {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Progress Steps */
+.progress-steps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: relative;
+  padding: 0 2rem;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.step-number {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #666;
+  border: 2px solid #e5e7eb;
+}
+
+.step.active .step-number {
+  background: #ff8c00;
+  color: white;
+  border-color: #ff8c00;
+}
+
+.step.completed .step-number {
+  background: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+}
+
+.step-label {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.step.active .step-label {
+  color: #ff8c00;
+}
+
+.step-connector {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 1rem;
+}
+
+/* Form Content */
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Profile Image Upload */
+.profile-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.upload-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px dashed #e5e7eb;
+}
+
+.upload-circle:hover {
+  border-color: #ff8c00;
+  background: #fff5e6;
+}
+
+.upload-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #666;
+}
+
+.upload-text {
+  font-size: 0.875rem;
+  color: #666;
+  text-align: center;
+}
+
+/* Curved Lines */
+.curved-line {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.curved-line path {
+  fill: none;
+  stroke: #16a34a;
+  stroke-width: 1;
+  opacity: 0.2;
+}
+
+/* Illustration Section */
+.auth-illustration {
+  flex: 1;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  padding: 3rem;
+  position: relative;
+  display: none; /* Hidden on mobile */
+}
+
+@media (min-width: 1024px) {
+  .auth-illustration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.illustration-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 400px;
+}
+
+.illustration-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 2rem;
+  stroke: currentColor;
+  animation: float 6s ease-in-out infinite;
+}
+
+.illustration-content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.illustration-content p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+/* Decorative Elements */
+.decorative-circles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.circle-1 {
+  width: 200px;
+  height: 200px;
+  top: -100px;
+  right: -100px;
+  animation: float 8s ease-in-out infinite;
+}
+
+.circle-2 {
+  width: 150px;
+  height: 150px;
+  bottom: -75px;
+  left: -75px;
+  animation: floatReverse 10s ease-in-out infinite;
+}
+
+.circle-3 {
+  width: 100px;
+  height: 100px;
+  top: 50%;
+  right: 10%;
+  animation: float 12s ease-in-out infinite;
+}
+
+/* Rest of the existing styles */
+.auth-logo {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-logo a {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #16a34a;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Links */
+.auth-links {
+  margin-top: 1.5rem;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.auth-link {
+  color: #16a34a;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.auth-link:hover {
+  color: #15803d;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(20px); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+  .auth-content {
+    max-width: 480px;
+  }
+  
+  .auth-form-section {
+    padding: 1.5rem;
+  }
+} 

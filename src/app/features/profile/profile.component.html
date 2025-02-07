@@ -1,0 +1,164 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6">
+        <h2 class="text-2xl font-semibold text-gray-900">
+          Mon profil
+        </h2>
+        <p class="mt-1 text-sm text-gray-600">
+          Gérez vos informations personnelles
+        </p>
+      </div>
+
+      <!-- Error Alert -->
+      <div *ngIf="error$ | async as error" class="px-4 py-3 bg-red-50 border-l-4 border-red-400">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-red-700">
+              {{ error?.message || 'Une erreur est survenue lors de la mise à jour du profil.' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <form class="border-t border-gray-200" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <div class="px-4 py-5 space-y-6 sm:px-6">
+          <!-- Email -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              [class.border-red-300]="profileForm.get('email')?.invalid && profileForm.get('email')?.touched"
+              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="text-red-500 text-xs mt-1">
+              {{ getErrorMessage('email') }}
+            </div>
+          </div>
+
+          <!-- Nom et Prénom -->
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              <label for="nom" class="block text-sm font-medium text-gray-700">Nom</label>
+              <input
+                type="text"
+                id="nom"
+                formControlName="nom"
+                [class.border-red-300]="profileForm.get('nom')?.invalid && profileForm.get('nom')?.touched"
+                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+              <div *ngIf="profileForm.get('nom')?.invalid && profileForm.get('nom')?.touched" class="text-red-500 text-xs mt-1">
+                {{ getErrorMessage('nom') }}
+              </div>
+            </div>
+            <div>
+              <label for="prenom" class="block text-sm font-medium text-gray-700">Prénom</label>
+              <input
+                type="text"
+                id="prenom"
+                formControlName="prenom"
+                [class.border-red-300]="profileForm.get('prenom')?.invalid && profileForm.get('prenom')?.touched"
+                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+              <div *ngIf="profileForm.get('prenom')?.invalid && profileForm.get('prenom')?.touched" class="text-red-500 text-xs mt-1">
+                {{ getErrorMessage('prenom') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Adresse -->
+          <div>
+            <label for="adresse" class="block text-sm font-medium text-gray-700">Adresse</label>
+            <input
+              type="text"
+              id="adresse"
+              formControlName="adresse"
+              [class.border-red-300]="profileForm.get('adresse')?.invalid && profileForm.get('adresse')?.touched"
+              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            <div *ngIf="profileForm.get('adresse')?.invalid && profileForm.get('adresse')?.touched" class="text-red-500 text-xs mt-1">
+              {{ getErrorMessage('adresse') }}
+            </div>
+          </div>
+
+          <!-- Téléphone -->
+          <div>
+            <label for="telephone" class="block text-sm font-medium text-gray-700">Téléphone</label>
+            <input
+              type="tel"
+              id="telephone"
+              formControlName="telephone"
+              [class.border-red-300]="profileForm.get('telephone')?.invalid && profileForm.get('telephone')?.touched"
+              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            <div *ngIf="profileForm.get('telephone')?.invalid && profileForm.get('telephone')?.touched" class="text-red-500 text-xs mt-1">
+              {{ getErrorMessage('telephone') }}
+            </div>
+          </div>
+
+          <!-- Date de naissance -->
+          <div>
+            <label for="dateNaissance" class="block text-sm font-medium text-gray-700">Date de naissance</label>
+            <input
+              type="date"
+              id="dateNaissance"
+              formControlName="dateNaissance"
+              [class.border-red-300]="profileForm.get('dateNaissance')?.invalid && profileForm.get('dateNaissance')?.touched"
+              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            <div *ngIf="profileForm.get('dateNaissance')?.invalid && profileForm.get('dateNaissance')?.touched" class="text-red-500 text-xs mt-1">
+              {{ getErrorMessage('dateNaissance') }}
+            </div>
+          </div>
+
+          <!-- Photo de profil -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Photo de profil</label>
+            <div class="mt-2 flex items-center space-x-5">
+              <div class="flex-shrink-0">
+                <div class="relative h-16 w-16">
+                  <img
+                    [src]="profileImageUrl"
+                    alt="Photo de profil"
+                    class="h-16 w-16 rounded-full object-cover"
+                    onerror="this.src='assets/images/default-avatar.png'"
+                  >
+                </div>
+              </div>
+              <label
+                for="photo-upload"
+                class="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                <span>Changer la photo</span>
+                <input
+                  id="photo-upload"
+                  name="photo-upload"
+                  type="file"
+                  class="sr-only"
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                >
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+          <button
+            type="submit"
+            [disabled]="!profileForm.valid || profileForm.pristine || (loading$ | async)"
+            class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg *ngIf="loading$ | async" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span *ngIf="loading$ | async">Enregistrement...</span>
+            <span *ngIf="!(loading$ | async)">Enregistrer les modifications</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div> 

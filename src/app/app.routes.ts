@@ -1,15 +1,7 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './features/home/home.component';
-import { LoginComponent } from './features/auth/login/login.component';
-import { RegisterComponent } from './features/auth/register/register.component';
-import { CollecteListComponent } from './features/collecte/collecte-list/collecte-list.component';
-import { CollecteFormComponent } from './features/collecte/collecte-form/collecte-form.component';
-import { CollecteDetailsComponent } from './features/collecte/collecte-details/collecte-details.component';
-import { PointsComponent } from './features/points/points.component';
-import { ProfileComponent } from './features/profile/profile.component';
-import { AuthComponent } from './features/auth/auth.component';
-import { AuthGuard, NonAuthGuard } from './core/guards';
 import { LandingComponent } from './features/landing/landing.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -19,33 +11,31 @@ export const routes: Routes = [
   {
     path: 'home',
     component: HomeComponent,
-    canActivate: [AuthGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'auth',
-    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES),
-    canActivate: [NonAuthGuard]
+    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
   },
   {
     path: 'collecte',
     loadChildren: () => import('./features/collecte/collecte.routes').then(m => m.COLLECTE_ROUTES),
-    canActivate: [AuthGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'collecteur',
     loadChildren: () => import('./features/collecteur/collecteur.routes').then(m => m.COLLECTEUR_ROUTES),
-    canActivate: [AuthGuard],
-    data: { roles: ['collecteur'] }
+    canActivate: [authGuard]
   },
   {
     path: 'points',
     loadChildren: () => import('./features/points/points.routes').then(m => m.POINTS_ROUTES),
-    canActivate: [AuthGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'profile',
     loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES),
-    canActivate: [AuthGuard]
+    canActivate: [authGuard]
   },
   {
     path: '**',

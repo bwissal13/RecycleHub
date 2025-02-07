@@ -12,6 +12,7 @@ import { AuthEffects } from './core/store/auth/auth.effects';
 import { PointsEffects } from './core/store/points/points.effects';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withComponentInputBinding()),
