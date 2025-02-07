@@ -1,0 +1,116 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- En-tête avec total des points -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+      <div class="px-4 py-5 sm:p-6">
+        <div class="text-center">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">Total des points</h3>
+          <div class="mt-2 text-3xl font-bold text-green-600">
+            {{ totalPoints$ | async }} points
+          </div>
+          <p class="mt-1 text-sm text-gray-500">
+            Accumulez des points en recyclant et échangez-les contre des récompenses
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert -->
+    <div *ngIf="error$ | async as error" class="mb-6 rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">
+            Erreur
+          </h3>
+          <div class="mt-2 text-sm text-red-700">
+            <p>{{ error?.message || 'Une erreur est survenue. Veuillez réessayer.' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading$ | async" class="flex justify-center items-center py-12">
+      <svg class="animate-spin h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+
+    <div *ngIf="!(loading$ | async)" class="space-y-8">
+      <!-- Récompenses disponibles -->
+      <div>
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Récompenses disponibles</h2>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div *ngFor="let reward of availableRewards$ | async" class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <img [src]="reward.image" [alt]="reward.name" class="h-12 w-12 object-cover rounded-lg">
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">{{ reward.name }}</dt>
+                    <dd class="text-sm text-gray-900">{{ reward.description }}</dd>
+                  </dl>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-900">{{ reward.pointsCost }} points</span>
+                  <button
+                    (click)="convertPoints(reward.id, reward.pointsCost)"
+                    [disabled]="(totalPoints$ | async) === null || ((totalPoints$ | async) ?? 0) < reward.pointsCost"
+                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Échanger
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historique des points -->
+      <div>
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Historique des points</h2>
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <ul role="list" class="divide-y divide-gray-200">
+            <li *ngFor="let entry of pointsHistory$ | async">
+              <div class="px-4 py-4 sm:px-6">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      {{ entry.description }}
+                    </p>
+                    <p class="mt-1 text-sm text-gray-500">
+                      {{ entry.date | date:'dd/MM/yyyy HH:mm' }}
+                    </p>
+                  </div>
+                  <div>
+                    <span [class]="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + getPointsClass(entry.points)">
+                      {{ formatPoints(entry.points) }} points
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <!-- Message si aucun historique -->
+            <li *ngIf="(pointsHistory$ | async)?.length === 0">
+              <div class="px-4 py-8 text-center text-sm text-gray-500">
+                Aucun historique de points pour le moment
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
