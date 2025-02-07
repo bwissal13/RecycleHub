@@ -1,0 +1,245 @@
+<!-- Navbar -->
+<app-nav></app-nav>
+
+<div class="min-h-screen bg-white">
+  <!-- Hero Section -->
+  <section class="min-h-screen flex items-center justify-center bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h1 class="mb-4">
+        <span class="text-4xl font-bold text-gray-900 block mb-2">Sauvez la planète 🌍</span>
+        <span class="text-4xl font-bold text-green-600 block">Un déchet à la fois</span>
+      </h1>
+      
+      <p class="text-lg text-gray-600 mb-12">
+        Rejoignez notre communauté de héros du recyclage et transformez vos déchets en récompenses ! 🌱
+      </p>
+      
+      <div class="flex justify-center gap-6">
+        <a routerLink="/collecte/nouvelle"
+           class="inline-flex items-center px-6 py-3 rounded-full text-base font-semibold text-white bg-green-600 hover:bg-green-700 transition-all duration-300">
+          <span class="text-xl mr-2">♻️</span>
+          Commencer à recycler
+        </a>
+        <a routerLink="/points"
+           class="inline-flex items-center px-6 py-3 rounded-full text-base font-semibold text-green-700 bg-green-100 hover:bg-green-200 transition-all duration-300">
+          <span class="text-xl mr-2">🎯</span>
+          Voir les récompenses
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Enhanced Game Introduction -->
+    <div class="mb-8 md:mb-12 bg-white border border-gray-100 rounded-2xl md:rounded-3xl shadow-sm overflow-hidden">
+      <div class="relative p-6 md:p-12">
+        <!-- Title Section -->
+        <div class="relative text-center mb-8">
+          <div class="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-4">
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-green-600 rounded-lg flex items-center justify-center">
+              <span class="text-2xl">🎮</span>
+            </div>
+            <h2 class="text-2xl md:text-4xl font-extrabold text-green-600">
+              Recycl'Impact Game
+            </h2>
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-green-600 rounded-lg flex items-center justify-center">
+              <span class="text-2xl">🌍</span>
+            </div>
+          </div>
+          
+          <!-- Description -->
+          <div class="max-w-3xl mx-auto bg-gray-50 rounded-xl md:rounded-2xl p-4 md:p-8">
+            <p class="text-gray-700 text-base md:text-lg leading-relaxed">
+              Découvrez l'impact réel de vos actions de recyclage ! Cliquez sur les matériaux pour les collecter et 
+              observez en temps réel comment vos petits gestes contribuent à la préservation de notre planète. 
+              Plus vous recyclez, plus votre impact positif grandit ! 🌱
+            </p>
+          </div>
+        </div>
+        
+        <!-- Game Features -->
+        <div class="flex flex-col md:flex-row justify-center gap-4 md:gap-12 relative">
+          <div class="bg-white rounded-xl p-4 md:p-6 border border-gray-100 hover:border-green-200 transition-all duration-300 flex items-center gap-3 md:gap-4">
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-green-50 rounded-xl flex items-center justify-center">
+              <span class="text-xl">🎯</span>
+            </div>
+            <div class="text-sm">
+              <div class="font-semibold text-gray-900">Cliquez pour collecter</div>
+              <div class="text-gray-500">Interagissez avec les matériaux</div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-xl p-4 md:p-6 border border-gray-100 hover:border-green-200 transition-all duration-300 flex items-center gap-3 md:gap-4">
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-green-50 rounded-xl flex items-center justify-center">
+              <span class="text-xl">⭐</span>
+            </div>
+            <div class="text-sm">
+              <div class="font-semibold text-gray-900">Gagnez des points</div>
+              <div class="text-gray-500">Augmentez votre score</div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-xl p-4 md:p-6 border border-gray-100 hover:border-green-200 transition-all duration-300 flex items-center gap-3 md:gap-4">
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-green-50 rounded-xl flex items-center justify-center">
+              <span class="text-xl">📊</span>
+            </div>
+            <div class="text-sm">
+              <div class="font-semibold text-gray-900">Suivez votre impact</div>
+              <div class="text-gray-500">Visualisez votre contribution</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <!-- Game Section -->
+      <div class="col-span-1 md:col-span-8" id="recycling-game">
+        <div class="bg-white rounded-xl shadow-sm p-4">
+          <!-- Game Stats -->
+          <div class="flex items-center justify-between mb-4 bg-green-600 rounded-lg p-2 text-white">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg">👑</span>
+              <div>
+                <div class="text-xs opacity-90">Niveau</div>
+                <div class="text-base font-bold">{{level}}</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div>
+                <div class="text-xs opacity-90">Score</div>
+                <div class="text-base font-bold">{{score}}</div>
+              </div>
+              <span class="text-lg">✨</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="relative h-1 bg-gray-100 rounded-full mb-4">
+            <div class="absolute inset-0 bg-green-600 rounded-full transition-all duration-300"
+                 [style.width]="(score / nextLevelScore * 100) + '%'"></div>
+          </div>
+
+          <!-- Materials Grid -->
+          <div class="grid grid-cols-2 gap-3">
+            <div *ngFor="let item of materiaux" 
+                 class="group relative bg-gray-50 rounded-lg border border-gray-100 p-3 transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                 (click)="collectItem(item, $event)">
+              <div class="text-center">
+                <div class="text-3xl mb-1 transform group-hover:scale-110 transition-transform">{{item.icon}}</div>
+                <div class="font-bold text-sm text-gray-900">{{item.nom}}</div>
+                <div class="text-green-600 text-xs font-semibold">{{item.points}} points/kg</div>
+                <div *ngIf="item.collected > 0" class="text-xs text-gray-600">
+                  {{item.collected}}kg collectés
+                </div>
+              </div>
+              
+              <!-- Hover Info -->
+              <div class="absolute inset-0 bg-green-600 bg-opacity-90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                <div class="text-white text-center p-2">
+                  <div class="text-sm font-semibold">💚 Impact</div>
+                  <div class="text-xs">{{item.impact}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Random Fact -->
+          <div *ngIf="currentFact" class="mt-3 bg-gray-50 rounded-lg p-3">
+            <div class="flex items-start space-x-2">
+              <span class="text-base">💡</span>
+              <div>
+                <div class="font-bold text-gray-900 text-xs">Le saviez-vous ?</div>
+                <div class="text-gray-600 text-xs">{{currentFact}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Section -->
+      <div class="col-span-1 md:col-span-4 space-y-4">
+        <!-- Impact Stats -->
+        <div class="bg-white rounded-xl shadow-sm p-4">
+          <h2 class="text-lg font-bold text-gray-900 mb-3 text-center">Votre Impact 🌍</h2>
+          <div class="space-y-3">
+            <div class="bg-gray-50 rounded-lg p-3 text-center">
+              <span class="text-2xl mb-1 block">🌳</span>
+              <div class="text-xl font-bold text-green-600">{{treesPlanted | number:'1.0-0'}}</div>
+              <p class="text-xs text-gray-600">Arbres sauvés</p>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3 text-center">
+              <span class="text-2xl mb-1 block">🌡️</span>
+              <div class="text-xl font-bold text-green-600">{{co2Saved | number:'1.0-0'}}kg</div>
+              <p class="text-xs text-gray-600">CO2 évité</p>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3 text-center">
+              <span class="text-2xl mb-1 block">💧</span>
+              <div class="text-xl font-bold text-green-600">{{waterSaved | number:'1.0-0'}}L</div>
+              <p class="text-xs text-gray-600">Eau économisée</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works - Full Width Section -->
+  <div class="w-full bg-gradient-to-b from-gray-50 to-white py-12 md:py-24 mt-8 md:mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Comment ça marche ? 🤔</h2>
+        <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+          Suivez ces trois étapes simples pour commencer votre voyage écologique et gagner des récompenses
+        </p>
+      </div>
+
+      <div class="relative">
+        <!-- Horizontal Line -->
+        <div class="absolute top-[4.5rem] left-0 right-0 h-1 bg-gradient-to-r from-green-200 via-green-400 to-green-200"></div>
+        
+        <!-- Steps -->
+        <div class="flex flex-col md:flex-row justify-between relative gap-8 md:gap-0">
+          <!-- Step 1 -->
+          <div class="relative flex flex-col items-center w-full md:w-1/3 px-4 md:px-8 group">
+            <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-green-600 rounded-full mb-8 z-10 flex items-center justify-center shadow-lg shadow-green-200 transform group-hover:scale-110 transition-all duration-300">
+              <span class="text-white font-bold">1</span>
+            </div>
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 w-full text-center transform group-hover:-translate-y-2 relative overflow-hidden">
+              <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-green-600"></div>
+              <span class="text-4xl block mb-6 transform group-hover:scale-110 transition-transform duration-300">📦</span>
+              <h3 class="text-xl font-bold text-gray-900 mb-4">Collectez</h3>
+              <p class="text-gray-600">Triez vos déchets recyclables et préparez-les pour la collecte</p>
+            </div>
+          </div>
+          
+          <!-- Step 2 -->
+          <div class="relative flex flex-col items-center w-full md:w-1/3 px-4 md:px-8 group">
+            <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-green-600 rounded-full mb-8 z-10 flex items-center justify-center shadow-lg shadow-green-200 transform group-hover:scale-110 transition-all duration-300">
+              <span class="text-white font-bold">2</span>
+            </div>
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 w-full text-center transform group-hover:-translate-y-2 relative overflow-hidden">
+              <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-green-600"></div>
+              <span class="text-4xl block mb-6 transform group-hover:scale-110 transition-transform duration-300">📅</span>
+              <h3 class="text-xl font-bold text-gray-900 mb-4">Planifiez</h3>
+              <p class="text-gray-600">Programmez une collecte à l'heure qui vous convient</p>
+            </div>
+          </div>
+          
+          <!-- Step 3 -->
+          <div class="relative flex flex-col items-center w-full md:w-1/3 px-4 md:px-8 group">
+            <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-green-600 rounded-full mb-8 z-10 flex items-center justify-center shadow-lg shadow-green-200 transform group-hover:scale-110 transition-all duration-300">
+              <span class="text-white font-bold">3</span>
+            </div>
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 w-full text-center transform group-hover:-translate-y-2 relative overflow-hidden">
+              <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-green-600"></div>
+              <span class="text-4xl block mb-6 transform group-hover:scale-110 transition-transform duration-300">🎁</span>
+              <h3 class="text-xl font-bold text-gray-900 mb-4">Gagnez</h3>
+              <p class="text-gray-600">Échangez vos points contre des récompenses exclusives</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
