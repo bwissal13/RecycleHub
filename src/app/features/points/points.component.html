@@ -1,95 +1,128 @@
+<app-nav></app-nav>
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- En-tête -->
-    <div class="sm:flex sm:items-center sm:justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">Mes points</h1>
-        <p class="mt-2 text-sm text-gray-700">
-          Gérez vos points et échangez-les contre des récompenses
-        </p>
+    <!-- Error Alert -->
+    <div *ngIf="error" class="mb-6 rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">Erreur</h3>
+          <div class="mt-2 text-sm text-red-700">
+            <p>{{ error }}</p>
+          </div>
+        </div>
       </div>
-      <div class="mt-4 sm:mt-0">
-        <div class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-green-600">
-          {{ pointsTotal }} points
+    </div>
+
+    <!-- Points Overview Card -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div class="p-6 sm:p-8 bg-gradient-to-r from-green-500 to-green-600">
+        <div class="flex flex-col items-center sm:flex-row sm:justify-between">
+          <div class="text-white">
+            <h1 class="text-3xl font-bold">Total des points</h1>
+            <p class="mt-2 text-green-100">Accumulez des points en recyclant et échangez-les contre des récompenses</p>
+            <div class="mt-4 text-green-100">
+              <p class="text-sm">Barème des points :</p>
+              <ul class="list-disc list-inside mt-1 space-y-1">
+                <li>Plastique : 2 points/kg</li>
+                <li>Verre : 1 point/kg</li>
+                <li>Papier : 1 point/kg</li>
+                <li>Métal : 5 points/kg</li>
+              </ul>
+            </div>
+          </div>
+          <div class="mt-4 sm:mt-0">
+            <div class="bg-white rounded-lg px-6 py-4 shadow-md">
+              <span class="text-4xl font-bold text-green-600">{{ pointsTotal }}</span>
+              <span class="ml-2 text-green-600">points</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Récompenses disponibles -->
     <div class="mt-8">
-      <h2 class="text-lg font-medium text-gray-900">Récompenses disponibles</h2>
-      <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div *ngFor="let reward of rewards" class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm">
-          <div class="flex flex-col h-full">
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <h3 class="text-xl font-semibold text-gray-900">{{ reward.valeur }}</h3>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [class.bg-green-100]="reward.disponible" [class.text-green-800]="reward.disponible" [class.bg-red-100]="!reward.disponible" [class.text-red-800]="!reward.disponible">
-                  {{ reward.points }} points
-                </span>
-              </div>
-              <p class="mt-2 text-sm text-gray-500">{{ reward.description }}</p>
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Récompenses disponibles</h2>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div *ngFor="let reward of rewards" 
+             class="bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-2xl font-bold text-gray-900">{{ reward.valeur }}</h3>
+              <span class="px-3 py-1 rounded-full text-sm font-semibold"
+                    [class.bg-green-100]="reward.disponible && pointsTotal >= reward.points"
+                    [class.text-green-800]="reward.disponible && pointsTotal >= reward.points"
+                    [class.bg-gray-100]="!reward.disponible || pointsTotal < reward.points"
+                    [class.text-gray-800]="!reward.disponible || pointsTotal < reward.points">
+                {{ reward.points }} points
+              </span>
             </div>
-            <div class="mt-4">
-              <button
-                type="button"
-                (click)="echangerPoints(reward.points)"
-                [disabled]="!reward.disponible || pointsTotal < reward.points"
-                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Échanger
-              </button>
-            </div>
+            <p class="text-gray-600 mb-6">{{ reward.description }}</p>
+            <button (click)="echangerPoints(reward.points)"
+                    [disabled]="!reward.disponible || pointsTotal < reward.points"
+                    class="w-full px-4 py-2 rounded-md font-medium transition-colors duration-200"
+                    [class.bg-green-600]="reward.disponible && pointsTotal >= reward.points"
+                    [class.hover:bg-green-700]="reward.disponible && pointsTotal >= reward.points"
+                    [class.text-white]="reward.disponible && pointsTotal >= reward.points"
+                    [class.bg-gray-100]="!reward.disponible || pointsTotal < reward.points"
+                    [class.text-gray-500]="!reward.disponible || pointsTotal < reward.points"
+                    [class.cursor-not-allowed]="!reward.disponible || pointsTotal < reward.points">
+              {{ reward.disponible && pointsTotal >= reward.points ? 'Échanger' : 'Points insuffisants' }}
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Historique des transactions -->
-    <div class="mt-8">
-      <h2 class="text-lg font-medium text-gray-900">Historique des transactions</h2>
-      <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="flex flex-col">
-          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Points
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr *ngFor="let transaction of transactions">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ transaction.date | date:'dd/MM/yyyy' }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [class.bg-green-100]="transaction.points > 0" [class.text-green-800]="transaction.points > 0" [class.bg-red-100]="transaction.points < 0" [class.text-red-800]="transaction.points < 0">
-                        {{ transaction.type }}
-                      </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm" [class.text-green-600]="transaction.points > 0" [class.text-red-600]="transaction.points < 0">
-                      {{ transaction.points > 0 ? '+' : '' }}{{ transaction.points }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ transaction.description }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+    <div class="mt-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Historique des transactions</h2>
+      <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let transaction of transactions" class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ transaction.date | date:'dd/MM/yyyy HH:mm' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                        [class.bg-green-100]="transaction.points > 0"
+                        [class.text-green-800]="transaction.points > 0"
+                        [class.bg-red-100]="transaction.points < 0"
+                        [class.text-red-800]="transaction.points < 0">
+                    {{ transaction.type === 'collecte' ? 'Collecte' : 'Échange' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                    [class.text-green-600]="transaction.points > 0"
+                    [class.text-red-600]="transaction.points < 0">
+                  {{ transaction.points > 0 ? '+' : '' }}{{ transaction.points }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                  {{ getTransactionDescription(transaction) }}
+                </td>
+              </tr>
+              <tr *ngIf="transactions.length === 0">
+                <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">
+                  Aucune transaction pour le moment
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -3,14 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, takeUntil, filter } from 'rxjs';
 import * as AuthActions from '../../../core/store/auth/auth.actions';
 import { AuthState } from '../../../core/store/auth/auth.reducer';
+import { AuthService } from '../../../core/services/auth.service';
+import { ObjectURLPipe } from '../../../core/pipes/object-url.pipe';
+import { NavComponent } from '../../../shared/components/nav/nav.component';
 
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, ObjectURLPipe, NavComponent],
   templateUrl: './edit-profile.component.html'
 })
 export class EditProfileComponent implements OnInit, OnDestroy {
@@ -18,13 +21,13 @@ export class EditProfileComponent implements OnInit, OnDestroy {
   loading$: Observable<boolean>;
   error$: Observable<any>;
   selectedFile: File | null = null;
-  currentUser$: Observable<any>;
   private destroy$ = new Subject<void>();
   private userId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private store: Store<{ auth: AuthState }>
+    private store: Store<{ auth: AuthState }>,
+    private authService: AuthService
   ) {
     this.profileForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -37,12 +40,15 @@ export class EditProfileComponent implements OnInit, OnDestroy {
 
     this.loading$ = this.store.select(state => state.auth.loading);
     this.error$ = this.store.select(state => state.auth.error);
-    this.currentUser$ = this.store.select(state => state.auth.user);
   }
 
   ngOnInit() {
-    this.currentUser$
-      .pipe(takeUntil(this.destroy$))
+    // Subscribe to the current user and initialize form
+    this.authService.getCurrentUser()
+      .pipe(
+        takeUntil(this.destroy$),
+        filter(user => !!user)
+      )
       .subscribe(user => {
         if (user) {
           this.userId = user.id;
@@ -65,7 +71,9 @@ export class EditProfileComponent implements OnInit, OnDestroy {
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    this.selectedFile = file;
+    if (file) {
+      this.selectedFile = file;
+    }
   }
 
   onSubmit() {
@@ -82,8 +90,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
   }
 
   onDeleteAccount() {
-    if (confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')) {
-      this.store.dispatch(AuthActions.deleteAccount({ userId: this.userId! }));
+    if (this.userId && confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')) {
+      this.store.dispatch(AuthActions.deleteAccount({ userId: this.userId }));
     }
   }
 

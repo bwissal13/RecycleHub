@@ -6,6 +6,8 @@ import { Store } from '@ngrx/store';
 import { take } from 'rxjs/operators';
 import { CollecteService } from '../../../core/services/collecte.service';
 import { AuthState } from '../../../core/store/auth/auth.reducer';
+import { AuthService } from '../../../core/services/auth.service';
+import { NavComponent } from '../../../shared/components/nav/nav.component';
 
 interface TypeDechet {
   type: string;
@@ -15,7 +17,7 @@ interface TypeDechet {
 @Component({
   selector: 'app-collecte-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavComponent],
   templateUrl: './collecte-form.component.html'
 })
 export class CollecteFormComponent implements OnInit {
@@ -32,7 +34,8 @@ export class CollecteFormComponent implements OnInit {
     private fb: FormBuilder,
     private collecteService: CollecteService,
     private router: Router,
-    private store: Store<{ auth: AuthState }>
+    private store: Store<{ auth: AuthState }>,
+    private authService: AuthService
   ) {
     this.collecteForm = this.fb.group({
       dechets: this.fb.array([], [Validators.required, Validators.minLength(1)]),

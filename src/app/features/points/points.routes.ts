@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
-import { PointsDashboardComponent } from './points-dashboard/points-dashboard.component';
+import { PointsComponent } from './points.component';
 
 export const POINTS_ROUTES: Routes = [
   {
     path: '',
-    component: PointsDashboardComponent
+    component: PointsComponent,
+    title: 'Mes Points'
   }
 ]; 

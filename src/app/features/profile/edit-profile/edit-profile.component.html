@@ -1,17 +1,102 @@
-<div class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div class="px-4 py-5 sm:px-6">
-        <h2 class="text-2xl font-semibold text-gray-900">
-          Modifier mon profil
+<app-nav></app-nav>
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-green-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header with Profile Preview -->
+    <div class="mb-10 text-center">
+      <h1 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+        Mon Profil
+      </h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Gérez vos informations personnelles et vos préférences
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Profile Preview Card -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <!-- Profile Header -->
+          <div class="relative h-32 bg-gradient-to-r from-green-400 to-green-600">
+            <div class="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+              <div class="relative">
+                <img 
+                  [src]="selectedFile ? (selectedFile | objectURL) : 'assets/images/default-avatar.png'"
+                  alt="Photo de profil"
+                  class="w-24 h-24 rounded-full border-4 border-white object-cover bg-white"
+                >
+                <label 
+                  for="file-upload"
+                  class="absolute bottom-0 right-0 bg-green-500 rounded-full p-1.5 cursor-pointer hover:bg-green-600 transition-colors"
+                >
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <input id="file-upload" type="file" class="sr-only" (change)="onFileSelected($event)" accept="image/*">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Info -->
+          <div class="pt-16 pb-6 px-6">
+            <div class="text-center">
+              <h2 class="text-xl font-semibold text-gray-900">
+                {{profileForm.get('prenom')?.value || 'Prénom'}} {{profileForm.get('nom')?.value || 'Nom'}}
         </h2>
-        <p class="mt-1 text-sm text-gray-600">
-          Mettez à jour vos informations personnelles
-        </p>
+              <p class="text-sm text-gray-500 mt-1">
+                {{profileForm.get('email')?.value || 'email@example.com'}}
+              </p>
+            </div>
+
+            <div class="mt-6 space-y-4">
+              <div class="flex items-center text-sm text-gray-600">
+                <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                {{profileForm.get('telephone')?.value || 'Téléphone'}}
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {{profileForm.get('adresse')?.value || 'Adresse'}}
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {{profileForm.get('dateNaissance')?.value || 'Date de naissance'}}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="mt-6 bg-white rounded-2xl shadow-xl p-6">
+          <h3 class="text-lg font-medium text-red-600">Zone de danger</h3>
+          <p class="mt-1 text-sm text-gray-500">
+            Une fois supprimé, votre compte ne pourra pas être restauré.
+          </p>
+          <button
+            type="button"
+            (click)="onDeleteAccount()"
+            class="mt-4 w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Supprimer mon compte
+          </button>
+        </div>
       </div>
 
+      <!-- Edit Form -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
       <!-- Error Alert -->
-      <div *ngIf="error$ | async as error" class="mx-4 my-4 rounded-md bg-red-50 p-4">
+          <div *ngIf="error$ | async as error" class="mb-6 rounded-md bg-red-50 p-4">
         <div class="flex">
           <div class="flex-shrink-0">
             <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -19,9 +104,7 @@
             </svg>
           </div>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-red-800">
-              Erreur
-            </h3>
+                <h3 class="text-sm font-medium text-red-800">Erreur de mise à jour</h3>
             <div class="mt-2 text-sm text-red-700">
               <p>{{ error?.message || 'Une erreur est survenue. Veuillez réessayer.' }}</p>
             </div>
@@ -29,152 +112,146 @@
         </div>
       </div>
 
-      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="border-t border-gray-200">
-        <div class="px-4 py-5 space-y-6 sm:px-6">
-          <!-- Photo de profil -->
+          <!-- Form Content -->
+          <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Left Column -->
+              <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">Photo de profil</label>
-            <div class="mt-1 flex items-center space-x-5">
-              <img 
-                *ngIf="(currentUser$ | async)?.photo"
-                [src]="(currentUser$ | async)?.photo"
-                alt="Photo de profil"
-                class="h-12 w-12 rounded-full object-cover"
-              >
-              <span 
-                *ngIf="!(currentUser$ | async)?.photo"
-                class="h-12 w-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center"
-              >
-                <svg class="h-6 w-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                  <label class="block text-sm font-medium text-gray-700">Email</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                 </svg>
-              </span>
-              <div>
-                <label
-                  for="photo"
-                  class="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  <span>Changer</span>
-                  <input 
-                    id="photo" 
-                    name="photo" 
-                    type="file" 
-                    class="sr-only"
-                    (change)="onFileSelected($event)"
-                    accept="image/*"
-                  >
-                </label>
-              </div>
-            </div>
           </div>
-
-          <!-- Informations personnelles -->
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
               <input
                 type="email"
-                id="email"
                 formControlName="email"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 [class.border-red-300]="profileForm.get('email')?.invalid && profileForm.get('email')?.touched"
-              >
+                      class="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                  </div>
               <div *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched" class="text-red-500 text-xs mt-1">
                 {{ getErrorMessage('email') }}
               </div>
             </div>
 
             <div>
-              <label for="telephone" class="block text-sm font-medium text-gray-700">Téléphone</label>
-              <input
-                type="tel"
-                id="telephone"
-                formControlName="telephone"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                [class.border-red-300]="profileForm.get('telephone')?.invalid && profileForm.get('telephone')?.touched"
-              >
-              <div *ngIf="profileForm.get('telephone')?.invalid && profileForm.get('telephone')?.touched" class="text-red-500 text-xs mt-1">
-                {{ getErrorMessage('telephone') }}
-              </div>
-            </div>
-
-            <div>
-              <label for="nom" class="block text-sm font-medium text-gray-700">Nom</label>
+                  <label class="block text-sm font-medium text-gray-700">Nom</label>
               <input
                 type="text"
-                id="nom"
                 formControlName="nom"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 [class.border-red-300]="profileForm.get('nom')?.invalid && profileForm.get('nom')?.touched"
-              >
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
               <div *ngIf="profileForm.get('nom')?.invalid && profileForm.get('nom')?.touched" class="text-red-500 text-xs mt-1">
                 {{ getErrorMessage('nom') }}
               </div>
             </div>
 
             <div>
-              <label for="prenom" class="block text-sm font-medium text-gray-700">Prénom</label>
+                  <label class="block text-sm font-medium text-gray-700">Prénom</label>
               <input
                 type="text"
-                id="prenom"
                 formControlName="prenom"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 [class.border-red-300]="profileForm.get('prenom')?.invalid && profileForm.get('prenom')?.touched"
-              >
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
               <div *ngIf="profileForm.get('prenom')?.invalid && profileForm.get('prenom')?.touched" class="text-red-500 text-xs mt-1">
                 {{ getErrorMessage('prenom') }}
               </div>
+              </div>
             </div>
 
-            <div class="sm:col-span-2">
-              <label for="adresse" class="block text-sm font-medium text-gray-700">Adresse</label>
+              <!-- Right Column -->
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Téléphone</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </div>
               <input
-                type="text"
-                id="adresse"
-                formControlName="adresse"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                [class.border-red-300]="profileForm.get('adresse')?.invalid && profileForm.get('adresse')?.touched"
-              >
-              <div *ngIf="profileForm.get('adresse')?.invalid && profileForm.get('adresse')?.touched" class="text-red-500 text-xs mt-1">
-                {{ getErrorMessage('adresse') }}
+                      type="tel" 
+                      formControlName="telephone"
+                      [class.border-red-300]="profileForm.get('telephone')?.invalid && profileForm.get('telephone')?.touched"
+                      class="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                  </div>
+                  <div *ngIf="profileForm.get('telephone')?.invalid && profileForm.get('telephone')?.touched" class="text-red-500 text-xs mt-1">
+                    {{ getErrorMessage('telephone') }}
               </div>
             </div>
 
             <div>
-              <label for="dateNaissance" class="block text-sm font-medium text-gray-700">Date de naissance</label>
+                  <label class="block text-sm font-medium text-gray-700">Date de naissance</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
               <input
                 type="date"
-                id="dateNaissance"
                 formControlName="dateNaissance"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 [class.border-red-300]="profileForm.get('dateNaissance')?.invalid && profileForm.get('dateNaissance')?.touched"
-              >
+                      class="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                  </div>
               <div *ngIf="profileForm.get('dateNaissance')?.invalid && profileForm.get('dateNaissance')?.touched" class="text-red-500 text-xs mt-1">
                 {{ getErrorMessage('dateNaissance') }}
+              </div>
+            </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Adresse</label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      formControlName="adresse"
+                      [class.border-red-300]="profileForm.get('adresse')?.invalid && profileForm.get('adresse')?.touched"
+                      class="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                  </div>
+                  <div *ngIf="profileForm.get('adresse')?.invalid && profileForm.get('adresse')?.touched" class="text-red-500 text-xs mt-1">
+                    {{ getErrorMessage('adresse') }}
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Actions -->
-        <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-3">
-          <button
-            type="button"
-            (click)="onDeleteAccount()"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Supprimer mon compte
-          </button>
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3 pt-6 border-t">
+              <a
+                routerLink="/home"
+                class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                </svg>
+                Retour
+              </a>
           <button
             type="submit"
             [disabled]="!profileForm.valid || (loading$ | async)"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span *ngIf="loading$ | async">Mise à jour...</span>
-            <span *ngIf="!(loading$ | async)">Enregistrer les modifications</span>
+                class="inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg *ngIf="loading$ | async" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg *ngIf="!(loading$ | async)" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ (loading$ | async) ? 'Enregistrement...' : 'Enregistrer les modifications' }}
           </button>
         </div>
       </form>
+        </div>
+      </div>
     </div>
   </div>
 </div> 

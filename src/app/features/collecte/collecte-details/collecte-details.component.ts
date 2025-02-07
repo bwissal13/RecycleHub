@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { CollecteService } from '../../../core/services/collecte.service';
+import { NavComponent } from '../../../shared/components/nav/nav.component';
 
 interface Collecte {
   id: number;
@@ -17,7 +19,7 @@ interface Collecte {
 @Component({
   selector: 'app-collecte-details',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NavComponent],
   templateUrl: './collecte-details.component.html'
 })
 export class CollecteDetailsComponent implements OnInit {
