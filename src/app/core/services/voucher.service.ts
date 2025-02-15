@@ -1,15 +1,9 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
-import { TDocumentDefinitions } from 'pdfmake/interfaces';
+import { Injectable } from '@angular/core';
+import jsPDF from 'jspdf';
 
-export interface VoucherData {
-  id: string;
+interface VoucherData {
   valeur: number;
   pointsUtilises: number;
-  dateEmission: Date;
-  dateExpiration: Date;
   utilisateurNom: string;
   utilisateurPrenom: string;
 }
@@ -18,131 +12,90 @@ export interface VoucherData {
   providedIn: 'root'
 })
 export class VoucherService {
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
-    if (isPlatformBrowser(this.platformId)) {
-      (pdfMake as any).vfs = (pdfFonts as any).vfs;
-    }
+  private readonly LOGO_URL = 'assets/images/logo.png';
+
+  generateVoucherPDF(data: VoucherData): void {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a5'
+    });
+
+    // Set background color
+    doc.setFillColor(240, 253, 244); // Light green background
+    doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
+
+    // Add decorative border
+    doc.setDrawColor(22, 163, 74); // Green border
+    doc.setLineWidth(0.5);
+    doc.rect(5, 5, doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 10, 'S');
+
+    // Add inner border
+    doc.setLineWidth(0.25);
+    doc.rect(8, 8, doc.internal.pageSize.width - 16, doc.internal.pageSize.height - 16, 'S');
+
+    // Add header
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(22, 163, 74); // Green text
+    doc.text('BON D\'ACHAT', doc.internal.pageSize.width / 2, 25, { align: 'center' });
+
+    // Add RecycleHub text
+    doc.setFontSize(16);
+    doc.text('RecycleHub', doc.internal.pageSize.width / 2, 35, { align: 'center' });
+
+    // Add value
+    doc.setFontSize(32);
+    doc.setTextColor(22, 163, 74);
+    doc.text(`${data.valeur} DH`, doc.internal.pageSize.width / 2, 55, { align: 'center' });
+
+    // Add user info
+    doc.setFontSize(12);
+    doc.setTextColor(55, 65, 81); // Gray text
+    doc.text(`Bénéficiaire: ${data.utilisateurPrenom} ${data.utilisateurNom}`, 20, 70);
+    doc.text(`Points utilisés: ${data.pointsUtilises} points`, 20, 78);
+
+    // Add voucher details
+    doc.setFontSize(10);
+    const today = new Date();
+    const expiryDate = new Date();
+    expiryDate.setMonth(expiryDate.getMonth() + 3);
+
+    doc.text(`Date d'émission: ${today.toLocaleDateString('fr-FR')}`, 20, 90);
+    doc.text(`Date d'expiration: ${expiryDate.toLocaleDateString('fr-FR')}`, 20, 96);
+
+    // Add unique voucher number
+    const voucherNumber = this.generateVoucherNumber();
+    doc.setFontSize(11);
+    doc.text(`N° ${voucherNumber}`, doc.internal.pageSize.width - 20, 90, { align: 'right' });
+
+    // Add terms and conditions
+    doc.setFontSize(8);
+    doc.text([
+      'Conditions d\'utilisation:',
+      '• Bon d\'achat valable chez tous nos partenaires',
+      '• Non remboursable et non échangeable',
+      '• Valable jusqu\'à la date d\'expiration indiquée',
+      '• Utilisable en une seule fois'
+    ], 20, 110);
+
+    // Add footer
+    doc.setFontSize(9);
+    doc.setTextColor(22, 163, 74);
+    doc.text('RecycleHub - Ensemble pour un avenir plus vert', doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 15, { align: 'center' });
+
+    // Add QR Code placeholder
+    doc.setDrawColor(128, 128, 128);
+    doc.setLineWidth(0.1);
+    doc.rect(doc.internal.pageSize.width - 45, 15, 30, 30, 'S');
+
+    // Save the PDF
+    doc.save(`bon-achat-${data.valeur}dh-${voucherNumber}.pdf`);
   }
 
-  private generateVoucherId(): string {
-    return 'BON-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-  }
-
-  generateVoucherPDF(data: Omit<VoucherData, 'id' | 'dateEmission' | 'dateExpiration'>): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      console.warn('PDF generation is only available in browser environment');
-      return;
-    }
-
-    const voucherData: VoucherData = {
-      ...data,
-      id: this.generateVoucherId(),
-      dateEmission: new Date(),
-      dateExpiration: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Expire dans 30 jours
-    };
-
-    const documentDefinition: TDocumentDefinitions = {
-      content: [
-        {
-          text: 'RecycleHub',
-          style: 'header',
-          alignment: 'center',
-          color: '#22C55E'
-        },
-        {
-          text: 'Bon d\'achat',
-          style: 'subheader',
-          alignment: 'center',
-          margin: [0, 10]
-        },
-        {
-          canvas: [
-            {
-              type: 'rect',
-              x: 0,
-              y: 0,
-              w: 515,
-              h: 200,
-              r: 5,
-              lineColor: '#22C55E'
-            }
-          ]
-        },
-        {
-          text: [
-            { text: 'N° du bon : ', bold: true },
-            voucherData.id
-          ],
-          margin: [0, 20, 0, 10]
-        },
-        {
-          text: [
-            { text: 'Valeur : ', bold: true },
-            `${voucherData.valeur} Dh`
-          ],
-          margin: [0, 0, 0, 10]
-        },
-        {
-          text: [
-            { text: 'Points utilisés : ', bold: true },
-            `${voucherData.pointsUtilises} points`
-          ],
-          margin: [0, 0, 0, 10]
-        },
-        {
-          text: [
-            { text: 'Bénéficiaire : ', bold: true },
-            `${voucherData.utilisateurPrenom} ${voucherData.utilisateurNom}`
-          ],
-          margin: [0, 0, 0, 10]
-        },
-        {
-          text: [
-            { text: 'Date d\'émission : ', bold: true },
-            voucherData.dateEmission.toLocaleDateString()
-          ],
-          margin: [0, 0, 0, 10]
-        },
-        {
-          text: [
-            { text: 'Date d\'expiration : ', bold: true },
-            voucherData.dateExpiration.toLocaleDateString()
-          ],
-          margin: [0, 0, 0, 20]
-        },
-        {
-          text: 'Conditions d\'utilisation :',
-          style: 'subheader',
-          margin: [0, 0, 0, 10]
-        },
-        {
-          ul: [
-            'Ce bon d\'achat est valable chez tous nos partenaires',
-            'Non cumulable avec d\'autres offres ou promotions',
-            'Non remboursable et non échangeable',
-            'À utiliser en une seule fois avant la date d\'expiration'
-          ],
-          margin: [0, 0, 0, 20]
-        }
-      ],
-      styles: {
-        header: {
-          fontSize: 24,
-          bold: true,
-          margin: [0, 0, 0, 10]
-        },
-        subheader: {
-          fontSize: 16,
-          bold: true,
-          margin: [0, 10, 0, 5]
-        }
-      },
-      defaultStyle: {
-        fontSize: 12,
-        color: '#333333'
-      }
-    };
-
-    pdfMake.createPdf(documentDefinition).download(`bon-achat-${voucherData.id}.pdf`);
+  private generateVoucherNumber(): string {
+    const timestamp = Date.now().toString().slice(-8);
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `RH-${timestamp}-${random}`;
   }
 } 
