@@ -248,8 +248,11 @@ export class AuthService {
 
   logout(): Observable<void> {
     if (isPlatformBrowser(this.platformId)) {
+      // Clear local storage
       localStorage.removeItem(this.CURRENT_USER_KEY);
       localStorage.removeItem(this.AUTH_TOKEN_KEY);
+      
+      // Clear current user subject
       this.currentUserSubject.next(null);
     }
     return of(void 0).pipe(delay(500));

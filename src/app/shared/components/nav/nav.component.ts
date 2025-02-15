@@ -14,48 +14,63 @@ import { AuthService } from '../../../core/services/auth.service';
           <div class="flex">
             <!-- Logo/Home -->
             <div class="flex-shrink-0 flex items-center">
-              <a routerLink="/home" class="text-green-600 font-bold text-xl">RecycleHub</a>
+              <a routerLink="/" class="text-green-600 font-bold text-xl">RecycleHub</a>
             </div>
 
             <!-- Navigation Links -->
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <a routerLink="/home" 
-                 routerLinkActive="border-green-500 text-gray-900"
-                 [routerLinkActiveOptions]="{exact: true}"
-                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                Accueil
-              </a>
-              <a routerLink="/collecte" 
-                 routerLinkActive="border-green-500 text-gray-900"
-                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                Mes Collectes
-              </a>
-              <a routerLink="/points" 
-                 routerLinkActive="border-green-500 text-gray-900"
-                 [routerLinkActiveOptions]="{exact: true}"
-                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer">
-                Mes Points
-              </a>
+              <ng-container *ngIf="authService.isAuthenticated()">
+                <a routerLink="/home" 
+                   routerLinkActive="border-green-500 text-gray-900"
+                   [routerLinkActiveOptions]="{exact: true}"
+                   class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                  Accueil
+                </a>
+                <a routerLink="/collecte" 
+                   routerLinkActive="border-green-500 text-gray-900"
+                   class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                  Mes Collectes
+                </a>
+                <a routerLink="/points" 
+                   routerLinkActive="border-green-500 text-gray-900"
+                   [routerLinkActiveOptions]="{exact: true}"
+                   class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium cursor-pointer">
+                  Mes Points
+                </a>
+              </ng-container>
             </div>
           </div>
 
           <!-- Right side buttons -->
           <div class="flex items-center">
-            <a routerLink="/profile" 
-               routerLinkActive="bg-green-100 text-green-700"
-               class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100">
-              Mon Profil
-            </a>
-            <button (click)="logout()" 
-                    class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-              Déconnexion
-            </button>
+            <ng-container *ngIf="!authService.isAuthenticated()">
+              <a routerLink="/auth/login" 
+                 class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100">
+                Se connecter
+              </a>
+              <a routerLink="/auth/register" 
+                 class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                S'inscrire
+              </a>
+            </ng-container>
+            
+            <ng-container *ngIf="authService.isAuthenticated()">
+              <a routerLink="/profile" 
+                 routerLinkActive="bg-green-100 text-green-700"
+                 class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100">
+                Mon Profil
+              </a>
+              <button (click)="logout()" 
+                      class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                Déconnexion
+              </button>
+            </ng-container>
           </div>
         </div>
       </div>
 
       <!-- Mobile menu -->
-      <div class="sm:hidden">
+      <div class="sm:hidden" *ngIf="authService.isAuthenticated()">
         <div class="pt-2 pb-3 space-y-1">
           <a routerLink="/home"
              routerLinkActive="bg-green-50 border-green-500 text-green-700"
@@ -85,9 +100,11 @@ import { AuthService } from '../../../core/services/auth.service';
   `
 })
 export class NavComponent {
-  constructor(private authService: AuthService) {}
+  constructor(public authService: AuthService) {}
 
   logout() {
-    this.authService.logout();
+    this.authService.logout().subscribe(() => {
+      window.location.href = '/';
+    });
   }
-} 
+}
