@@ -8,12 +8,11 @@ import * as AuthActions from '../../../core/store/auth/auth.actions';
 import { AuthState } from '../../../core/store/auth/auth.reducer';
 import { AuthService } from '../../../core/services/auth.service';
 import { ObjectURLPipe } from '../../../core/pipes/object-url.pipe';
-import { NavComponent } from '../../../shared/components/nav/nav.component';
 
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, ObjectURLPipe, NavComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, ObjectURLPipe],
   templateUrl: './edit-profile.component.html'
 })
 export class EditProfileComponent implements OnInit, OnDestroy {
