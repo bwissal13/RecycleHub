@@ -73,6 +73,7 @@ export class CollecteService {
   ) {
     if (isPlatformBrowser(this.platformId)) {
       this.initializeCollectes();
+      this.calculateAndUpdateExistingPoints();
     }
   }
 
@@ -248,58 +249,43 @@ export class CollecteService {
   }
 
   validerCollecte(collecteId: number, poidsReel: number): Observable<Collecte> {
-    console.log('Validation de la collecte:', { collecteId, poidsReel });
-    return new Observable<Collecte>(subscriber => {
-      try {
-        const collectes = this.getCollectes();
-        const collecteIndex = collectes.findIndex(c => c.id === collecteId);
-        
-        if (collecteIndex === -1) {
-          throw new Error('Collecte non trouvée');
-        }
-
-        const collecte = collectes[collecteIndex];
-        
-        if (collecte.statut === 'validee') {
-          throw new Error('Cette collecte a déjà été validée');
-        }
-
-        // Calculer les points en fonction du poids réel et du type de déchet
-        const pointsGagnes = collecte.types.reduce((total, type) => {
-          const pointsParKg = this.POINTS_PER_KG[type.type as keyof typeof this.POINTS_PER_KG] || 1;
-          const poidsTypeReel = (poidsReel / collecte.poids) * type.poids; // Calcul proportionnel du poids réel par type
-          return total + (poidsTypeReel * pointsParKg);
-        }, 0);
-
-        console.log('Points calculés:', pointsGagnes);
-
-        // Mettre à jour la collecte
-        const updatedCollecte: Collecte = {
-          ...collecte,
-          statut: 'validee',
-          poidsReel,
-          pointsAttribues: pointsGagnes
-        };
-
-        // Mettre à jour les points de l'utilisateur
-        this.pointsService.addCollectePoints(
-          collecte.types.map(type => ({
-            type: type.type,
-            poids: (poidsReel / collecte.poids) * type.poids // Calcul proportionnel du poids réel par type
-          }))
-        );
-
-        // Sauvegarder la collecte mise à jour
-        collectes[collecteIndex] = updatedCollecte;
-        this.saveCollectes(collectes);
-
-        console.log('Collecte validée avec succès:', updatedCollecte);
-        subscriber.next(updatedCollecte);
-        subscriber.complete();
-      } catch (error) {
-        console.error('Erreur lors de la validation:', error);
-        subscriber.error(error);
+    return new Observable<Collecte>((subscriber) => {
+      const collectes = this.getCollectes();
+      const index = collectes.findIndex(c => c.id === collecteId);
+      
+      if (index === -1) {
+        subscriber.error(new Error('Collecte non trouvée'));
+        return;
       }
+
+      const collecte = collectes[index];
+      
+      // Calculate points based on real weight
+      const weightRatio = poidsReel / collecte.poids;
+      const adjustedTypes = collecte.types.map(type => ({
+        ...type,
+        poids: type.poids * weightRatio
+      }));
+      
+      // Calculate points using PointsService to ensure consistency
+      const pointsAttribues = this.pointsService.calculatePointsForCollecte(adjustedTypes);
+      
+      // Update the collection
+      const updatedCollecte: Collecte = {
+        ...collecte,
+        statut: 'validee',
+        poidsReel,
+        pointsAttribues
+      };
+      
+      collectes[index] = updatedCollecte;
+      this.saveCollectes(collectes);
+      
+      // Add points to user's total
+      this.pointsService.addCollectePoints(adjustedTypes);
+      
+      subscriber.next(updatedCollecte);
+      subscriber.complete();
     }).pipe(delay(500));
   }
 
@@ -308,5 +294,68 @@ export class CollecteService {
       statut: 'rejetee',
       raisonRejet: raison
     });
+  }
+
+  private calculateAndUpdateExistingPoints() {
+    const collectes = this.getCollectes();
+    const validatedCollectes = collectes.filter(c => c.statut === 'validee');
+    
+    // Group collections by user
+    const collectesByUser = validatedCollectes.reduce((acc, collecte) => {
+      if (!acc[collecte.userId]) {
+        acc[collecte.userId] = [];
+      }
+      acc[collecte.userId].push(collecte);
+      return acc;
+    }, {} as { [key: number]: Collecte[] });
+
+    // Calculate and update points for each user
+    Object.entries(collectesByUser).forEach(([userId, userCollectes]) => {
+      let totalPoints = 0;
+
+      userCollectes.forEach(collecte => {
+        if (collecte.poidsReel) {
+          const weightRatio = collecte.poidsReel / collecte.poids;
+          const adjustedTypes = collecte.types.map(type => ({
+            ...type,
+            poids: type.poids * weightRatio
+          }));
+
+          const points = this.pointsService.calculatePointsForCollecte(adjustedTypes);
+          totalPoints += points;
+
+          // Update pointsAttribues in the collecte if not already set
+          if (!collecte.pointsAttribues) {
+            collecte.pointsAttribues = points;
+          }
+        }
+      });
+
+      // Update user points in localStorage
+      if (isPlatformBrowser(this.platformId)) {
+        const usersJson = localStorage.getItem('users');
+        if (usersJson) {
+          const users = JSON.parse(usersJson);
+          const userIndex = users.findIndex((u: User) => u.id === Number(userId));
+          if (userIndex !== -1) {
+            users[userIndex].points = (users[userIndex].points || 0) + totalPoints;
+            localStorage.setItem('users', JSON.stringify(users));
+          }
+        }
+
+        // Update current user if it's them
+        const currentUserJson = localStorage.getItem('currentUser');
+        if (currentUserJson) {
+          const currentUser = JSON.parse(currentUserJson);
+          if (currentUser.id === Number(userId)) {
+            currentUser.points = (currentUser.points || 0) + totalPoints;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          }
+        }
+      }
+    });
+
+    // Save updated collectes with pointsAttribues
+    this.saveCollectes(collectes);
   }
 } 

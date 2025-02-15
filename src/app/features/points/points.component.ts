@@ -19,8 +19,7 @@ interface Reward {
   selector: 'app-points',
   standalone: true,
   imports: [CommonModule, RouterModule, NavComponent],
-  templateUrl: './points.component.html',
-  providers: [PointsService, VoucherService]
+  templateUrl: './points.component.html'
 })
 export class PointsComponent implements OnInit, OnDestroy {
   pointsTotal = 0;
@@ -45,19 +44,28 @@ export class PointsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Subscribe to points updates
-    this.pointsService.getPoints()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(points => {
-        this.pointsTotal = points;
-      });
+    // Force a refresh of points data
+    this.pointsService.loadPointsData();
+    
+    // Subscribe to points updates with a small delay to ensure data is loaded
+    setTimeout(() => {
+      this.pointsService.getPoints()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(points => {
+          console.log('Points updated:', points); // Debug log
+          this.pointsTotal = points;
+          // Update rewards availability whenever points change
+          this.updateRewardsAvailability();
+        });
 
-    // Subscribe to transactions
-    this.pointsService.getTransactions()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(transactions => {
-        this.transactions = transactions;
-      });
+      // Subscribe to transactions
+      this.pointsService.getTransactions()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(transactions => {
+          console.log('Transactions updated:', transactions); // Debug log
+          this.transactions = transactions;
+        });
+    }, 100);
 
     // Get user data for voucher generation
     this.authService.getCurrentUser()
@@ -70,9 +78,6 @@ export class PointsComponent implements OnInit, OnDestroy {
           };
         }
       });
-
-    // Update rewards availability based on points
-    this.updateRewardsAvailability();
   }
 
   ngOnDestroy(): void {

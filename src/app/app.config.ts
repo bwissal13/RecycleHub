@@ -13,6 +13,9 @@ import { AuthEffects } from './core/store/auth/auth.effects';
 import { PointsEffects } from './core/store/points/points.effects';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { PointsService } from './core/services/points.service';
+import { VoucherService } from './core/services/voucher.service';
+import { AuthService } from './core/services/auth.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -32,6 +35,9 @@ export const appConfig: ApplicationConfig = {
       AuthEffects,
       PointsEffects
     ]),
-    provideClientHydration()
+    provideClientHydration(),
+    PointsService,
+    VoucherService,
+    AuthService
   ]
 };

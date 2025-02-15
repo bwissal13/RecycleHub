@@ -23,8 +23,8 @@ export class PointsService {
   private readonly POINTS_PER_KG = {
     'Plastique': 2,
     'Verre': 1,
-    'Papier': 1,
-    'Métal': 5
+    'Papier': 1.5,
+    'Métal': 3
   };
   private readonly CONVERSION_RATES = [
     { points: 100, valeur: 50 },
@@ -39,19 +39,80 @@ export class PointsService {
     this.loadPointsData();
   }
 
-  private loadPointsData() {
+  loadPointsData() {
     if (isPlatformBrowser(this.platformId)) {
+      // Get all validated collections
+      const collectesJson = localStorage.getItem('recycleHub_collectes');
+      let totalPoints = 0;
+      let transactions: PointTransaction[] = [];
+      
+      if (collectesJson) {
+        try {
+          const collectes = JSON.parse(collectesJson);
+          const validatedCollectes = collectes.filter((c: any) => c.statut === 'validee');
+          
+          // Create transactions and calculate points from validated collections
+          validatedCollectes.forEach((collecte: any) => {
+            if (collecte.poidsReel && collecte.types) {
+              const weightRatio = collecte.poidsReel / collecte.poids;
+              const adjustedTypes = collecte.types.map((type: any) => ({
+                type: type.type,
+                poids: type.poids * weightRatio
+              }));
+              
+              const points = this.calculatePointsForCollecte(adjustedTypes);
+              totalPoints += points;
+
+              // Create transaction for this collection if it doesn't exist
+              const transaction: PointTransaction = {
+                id: collecte.id,
+                date: collecte.date,
+                type: 'collecte',
+                points: points,
+                description: 'Points gagnés pour la collecte',
+                details: {
+                  materiaux: adjustedTypes.map((m: { type: string; poids: number }) => ({
+                    ...m,
+                    points: m.poids * (this.POINTS_PER_KG[m.type as keyof typeof this.POINTS_PER_KG] || 0)
+                  }))
+                }
+              };
+              transactions.push(transaction);
+            }
+          });
+
+          // Sort transactions by date (most recent first)
+          transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          
+          // Save transactions to localStorage
+          localStorage.setItem(this.TRANSACTIONS_KEY, JSON.stringify(transactions));
+          this.transactionsSubject.next(transactions);
+        } catch (error) {
+          console.error('Error calculating total points:', error);
+        }
+      }
+
+      // Update current user points
       const currentUserJson = localStorage.getItem('currentUser');
       if (currentUserJson) {
         const currentUser = JSON.parse(currentUserJson);
-        this.pointsSubject.next(currentUser.points || 0);
+        currentUser.points = totalPoints;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        // Update users list
+        const usersJson = localStorage.getItem('users');
+        if (usersJson) {
+          const users = JSON.parse(usersJson);
+          const userIndex = users.findIndex((u: any) => u.id === currentUser.id);
+          if (userIndex !== -1) {
+            users[userIndex].points = totalPoints;
+            localStorage.setItem('users', JSON.stringify(users));
+          }
+        }
       }
 
-      const transactionsJson = localStorage.getItem(this.TRANSACTIONS_KEY);
-      if (transactionsJson) {
-        const transactions = JSON.parse(transactionsJson);
-        this.transactionsSubject.next(transactions);
-      }
+      // Update points in subject
+      this.pointsSubject.next(totalPoints);
     }
   }
 
@@ -86,14 +147,22 @@ export class PointsService {
       points: pointsEarned,
       description: 'Points gagnés pour la collecte',
       details: {
-        materiaux: materiaux.map(m => ({
+        materiaux: materiaux.map((m: { type: string; poids: number }) => ({
           ...m,
           points: m.poids * (this.POINTS_PER_KG[m.type as keyof typeof this.POINTS_PER_KG] || 0)
         }))
       }
     };
 
-    this.updatePoints(newTotal, transaction);
+    // Get existing transactions
+    const currentTransactions = this.transactionsSubject.value;
+    const updatedTransactions = [transaction, ...currentTransactions];
+    
+    // Save updated transactions
+    localStorage.setItem(this.TRANSACTIONS_KEY, JSON.stringify(updatedTransactions));
+    this.transactionsSubject.next(updatedTransactions);
+
+    this.updatePoints(newTotal);
   }
 
   exchangePoints(pointsToExchange: number): boolean {
@@ -116,11 +185,19 @@ export class PointsService {
       }
     };
 
-    this.updatePoints(newTotal, transaction);
+    // Get existing transactions
+    const currentTransactions = this.transactionsSubject.value;
+    const updatedTransactions = [transaction, ...currentTransactions];
+    
+    // Save updated transactions
+    localStorage.setItem(this.TRANSACTIONS_KEY, JSON.stringify(updatedTransactions));
+    this.transactionsSubject.next(updatedTransactions);
+
+    this.updatePoints(newTotal);
     return true;
   }
 
-  private updatePoints(newTotal: number, transaction?: PointTransaction) {
+  private updatePoints(newTotal: number) {
     if (isPlatformBrowser(this.platformId)) {
       // Update points in localStorage and state
       const currentUserJson = localStorage.getItem('currentUser');
@@ -142,14 +219,6 @@ export class PointsService {
 
         // Emit the new points value immediately
         this.pointsSubject.next(newTotal);
-
-        // Update transactions if provided
-        if (transaction) {
-          const currentTransactions = this.transactionsSubject.value;
-          const updatedTransactions = [transaction, ...currentTransactions];
-          this.transactionsSubject.next(updatedTransactions);
-          localStorage.setItem(this.TRANSACTIONS_KEY, JSON.stringify(updatedTransactions));
-        }
 
         // Force a refresh of the points in the store
         window.dispatchEvent(new Event('storage'));
