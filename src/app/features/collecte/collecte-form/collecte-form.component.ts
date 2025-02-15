@@ -137,10 +137,14 @@ export class CollecteFormComponent implements OnInit {
     console.log('Form value:', this.collecteForm.value);
     console.log('Selected photos:', this.selectedPhotos);
 
-    if (this.isFormValid()) {
+    if (this.isFormValid() && this.dechets.length > 0 && this.userId) {
       const poidsTotal = this.calculerPoidsTotal();
       if (poidsTotal > 10) {
         this.error = 'Le poids total ne peut pas dépasser 10kg';
+        return;
+      }
+      if (poidsTotal < 1) {
+        this.error = 'Le poids total doit être d\'au moins 1kg';
         return;
       }
 

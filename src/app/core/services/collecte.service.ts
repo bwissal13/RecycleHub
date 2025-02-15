@@ -149,6 +149,18 @@ export class CollecteService {
       (async () => {
         try {
           const collectes = this.getCollectes();
+          
+          // Check if user has reached the maximum limit of pending requests
+          const pendingCollectes = collectes.filter(c => 
+            c.userId === data.userId && 
+            ['en_attente', 'occupee', 'en_cours'].includes(c.statut)
+          );
+          
+          if (pendingCollectes.length >= 3) {
+            subscriber.error(new Error('Vous avez atteint la limite de 3 demandes simultanées en attente.'));
+            return;
+          }
+
           const processedPhotos = data.photos ? await this.processPhotos(data.photos) : [];
           
           const newCollecte: Collecte = {
