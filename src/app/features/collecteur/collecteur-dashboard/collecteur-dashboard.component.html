@@ -117,7 +117,7 @@
             <h3 class="text-lg leading-6 font-medium text-gray-900">
               Collectes disponibles
             </h3>
-    </div>
+          </div>
           <ul role="list" class="divide-y divide-gray-200">
             <li *ngFor="let collecte of collectesDisponibles$ | async" class="p-4">
                 <div class="flex items-center justify-between">
@@ -156,7 +156,7 @@
             <h3 class="text-lg leading-6 font-medium text-gray-900">
               Mes collectes en cours
             </h3>
-      </div>
+          </div>
           <ul role="list" class="divide-y divide-gray-200">
             <li *ngFor="let collecte of collectesEnCours$ | async" class="p-4">
               <div>
@@ -278,6 +278,74 @@
                 Aucune collecte en cours
             </li>
           </ul>
+        </div>
+
+        <!-- Collection History -->
+        <div class="mt-8">
+          <div class="bg-white rounded-lg shadow">
+            <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+              <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Historique des collectes
+              </h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Matériaux
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Adresse
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Points
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr *ngFor="let collecte of collectesHistorique$ | async">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div>{{ collecte.date | date:'dd/MM/yyyy' }}</div>
+                      <div class="text-gray-500">{{ collecte.creneau }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div *ngFor="let type of collecte.types" class="text-sm text-gray-900">
+                        {{ type.type }} - {{ type.poids }}kg
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {{ collecte.adresse }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + getStatutClass(collecte.statut)">
+                        {{ getStatutLabel(collecte.statut) }}
+                      </span>
+                      <div *ngIf="collecte.statut === 'rejetee'" class="mt-1 text-xs text-red-500">
+                        {{ collecte.raisonRejet }}
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <ng-container *ngIf="collecte.statut === 'validee'">
+                        {{ calculatePoints(collecte.types) }} points
+                      </ng-container>
+                    </td>
+                  </tr>
+                  <tr *ngIf="(collectesHistorique$ | async)?.length === 0">
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                      Aucun historique de collecte
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -38,9 +38,11 @@ export class CollecteurDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private collectesDisponiblesSubject = new BehaviorSubject<Collecte[]>([]);
   private collectesEnCoursSubject = new BehaviorSubject<Collecte[]>([]);
+  private collectesHistoriqueSubject = new BehaviorSubject<Collecte[]>([]);
 
   collectesDisponibles$ = this.collectesDisponiblesSubject.asObservable();
   collectesEnCours$ = this.collectesEnCoursSubject.asObservable();
+  collectesHistorique$ = this.collectesHistoriqueSubject.asObservable();
   loading = false;
   error: string | null = null;
   ville: string = '';
@@ -80,6 +82,7 @@ export class CollecteurDashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.collectesDisponiblesSubject.complete();
     this.collectesEnCoursSubject.complete();
+    this.collectesHistoriqueSubject.complete();
   }
 
   chargerCollectes() {
@@ -110,11 +113,14 @@ export class CollecteurDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (collectes) => {
           const enCours = collectes.filter(c => ['occupee', 'en_cours'].includes(c.statut));
+          const historique = collectes.filter(c => ['validee', 'rejetee'].includes(c.statut));
           this.collectesEnCoursSubject.next(enCours);
+          this.collectesHistoriqueSubject.next(historique);
         },
         error: (error) => {
           this.error = error.message;
           this.collectesEnCoursSubject.next([]);
+          this.collectesHistoriqueSubject.next([]);
         }
       });
   }
@@ -255,7 +261,7 @@ export class CollecteurDashboardComponent implements OnInit, OnDestroy {
   getStatutLabel(statut: string): string {
     const labels = {
       en_attente: 'En attente',
-      occupee: 'Occupée',
+      occupee: 'Acceptée',
       en_cours: 'En cours',
       validee: 'Validée',
       rejetee: 'Rejetée'
@@ -264,15 +270,14 @@ export class CollecteurDashboardComponent implements OnInit, OnDestroy {
   }
 
   calculatePoints(types: Array<{ type: string; poids: number }>): number {
-    const pointsPerKg = {
-      'Plastique': 2,
-      'Verre': 1,
-      'Papier': 1,
-      'Métal': 5
-    };
-
-    return types.reduce((total, item) => {
-      return total + (item.poids * (pointsPerKg[item.type as keyof typeof pointsPerKg] || 0));
+    return types.reduce((total, type) => {
+      const pointsPerKg = {
+        'Plastique': 2,
+        'Verre': 1,
+        'Papier': 1,
+        'Métal': 5
+      };
+      return total + (type.poids * (pointsPerKg[type.type as keyof typeof pointsPerKg] || 0));
     }, 0);
   }
 
