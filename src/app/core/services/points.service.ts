@@ -23,8 +23,8 @@ export class PointsService {
   private readonly POINTS_PER_KG = {
     'Plastique': 2,
     'Verre': 1,
-    'Papier': 1.5,
-    'Métal': 3
+    'Papier': 1,
+    'Métal': 5
   };
   private readonly CONVERSION_RATES = [
     { points: 100, valeur: 50 },
@@ -41,6 +41,17 @@ export class PointsService {
 
   loadPointsData() {
     if (isPlatformBrowser(this.platformId)) {
+      // Get current user first
+      const currentUserJson = localStorage.getItem('currentUser');
+      if (!currentUserJson) {
+        this.pointsSubject.next(0);
+        this.transactionsSubject.next([]);
+        return;
+      }
+
+      const currentUser = JSON.parse(currentUserJson);
+      const userId = currentUser.id;
+
       // Get all validated collections
       const collectesJson = localStorage.getItem('recycleHub_collectes');
       let totalPoints = 0;
@@ -49,7 +60,10 @@ export class PointsService {
       if (collectesJson) {
         try {
           const collectes = JSON.parse(collectesJson);
-          const validatedCollectes = collectes.filter((c: any) => c.statut === 'validee');
+          // Filter for only current user's validated collections
+          const validatedCollectes = collectes.filter((c: any) => 
+            c.statut === 'validee' && c.userId === userId
+          );
           
           // Create transactions and calculate points from validated collections
           validatedCollectes.forEach((collecte: any) => {
@@ -93,21 +107,17 @@ export class PointsService {
       }
 
       // Update current user points
-      const currentUserJson = localStorage.getItem('currentUser');
-      if (currentUserJson) {
-        const currentUser = JSON.parse(currentUserJson);
-        currentUser.points = totalPoints;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        
-        // Update users list
-        const usersJson = localStorage.getItem('users');
-        if (usersJson) {
-          const users = JSON.parse(usersJson);
-          const userIndex = users.findIndex((u: any) => u.id === currentUser.id);
-          if (userIndex !== -1) {
-            users[userIndex].points = totalPoints;
-            localStorage.setItem('users', JSON.stringify(users));
-          }
+      currentUser.points = totalPoints;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      
+      // Update users list
+      const usersJson = localStorage.getItem('users');
+      if (usersJson) {
+        const users = JSON.parse(usersJson);
+        const userIndex = users.findIndex((u: any) => u.id === currentUser.id);
+        if (userIndex !== -1) {
+          users[userIndex].points = totalPoints;
+          localStorage.setItem('users', JSON.stringify(users));
         }
       }
 
@@ -136,6 +146,16 @@ export class PointsService {
   }
 
   addCollectePoints(materiaux: Array<{ type: string; poids: number }>) {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    const currentUserJson = localStorage.getItem('currentUser');
+    if (!currentUserJson) {
+      console.error('No current user found when adding points');
+      return;
+    }
+
     const pointsEarned = this.calculatePointsForCollecte(materiaux);
     const currentPoints = this.pointsSubject.value;
     const newTotal = currentPoints + pointsEarned;
