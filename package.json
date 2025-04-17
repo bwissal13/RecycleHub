@@ -20,7 +20,7 @@
     "@angular/platform-browser-dynamic": "^19.1.0",
     "@angular/platform-server": "^19.1.0",
     "@angular/router": "^19.1.0",
-    "@angular/ssr": "^19.1.5",
+    "@angular/ssr": "^19.2.8",
     "@tailwindcss/postcss": "^4.0.3",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^2.4.3",
