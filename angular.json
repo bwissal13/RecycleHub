@@ -23,15 +23,15 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "public",
+                "output": "/assets"
               }
             ],
             "styles": [
               "src/styles.css"
             ],
             "scripts": [],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
+            "server": "src/main.server.ts",   
             "ssr": {
               "entry": "src/server.ts"
             }
@@ -86,7 +86,8 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                  "input": "public",
+                "output": "/assets"
               }
             ],
             "styles": [
